@@ -17,7 +17,7 @@ tput civis 2>/dev/null || true
 trap 'tput cnorm 2>/dev/null || true' EXIT
 
 # ── 清屏辅助函数 ─────────────────────────────────────
-FRAME_LINES=10
+FRAME_LINES=11
 
 clear_frame() {
   for ((i=0; i<FRAME_LINES; i++)); do
@@ -134,8 +134,8 @@ DELAY=0.18
 
 # 帧循环
 for frame_fn in draw_frame1 draw_frame2 draw_frame3 draw_frame4 draw_frame5 draw_frame6; do
-  # 回到帧起始位置（10行 + 1空行 = 11行）
-  printf "\033[11A\033[0G"
+  # 回到帧起始位置
+  printf "\033[${FRAME_LINES}A\033[0G"
   eval "$frame_fn"
   echo ""
   sleep "$DELAY"
@@ -145,8 +145,8 @@ done
 sleep 0.8
 
 # 回到帧起始位置，清除动画区域
-printf "\033[11A\033[0G"
-for ((i=0; i<11; i++)); do
+printf "\033[${FRAME_LINES}A\033[0G"
+for ((i=0; i<FRAME_LINES; i++)); do
   printf "\033[2K\n"
 done
-printf "\033[11A\033[0G"
+printf "\033[${FRAME_LINES}A\033[0G"
