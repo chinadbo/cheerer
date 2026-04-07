@@ -27,6 +27,9 @@ MESSAGES=(
 )
 
 MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+if [[ -n "${CHEERER_MILESTONE_MSG:-}" ]]; then
+  MSG="$MSG ${CHEERER_MILESTONE_MSG}"
+fi
 
 # 输出文字鼓励（dumb terminal 模式不加颜色）
 CHEERER_DUMB="${CHEERER_DUMB:-false}"

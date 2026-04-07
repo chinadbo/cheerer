@@ -25,6 +25,9 @@ MESSAGES=(
 )
 
 MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+if [[ -n "${CHEERER_MILESTONE_MSG:-}" ]]; then
+  MSG="$MSG ${CHEERER_MILESTONE_MSG}"
+fi
 
 # テキスト出力（dumb terminal モードでは ANSI なし）
 CHEERER_DUMB="${CHEERER_DUMB:-false}"

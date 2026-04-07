@@ -59,6 +59,8 @@ HOOK_EVENT=$(printf '%s' "$_HOOK_EVENT" | grep -o '"hook_event_name"[[:space:]]*
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANIM_DIR="$SCRIPT_DIR/animations"
 VOICE_DIR="$SCRIPT_DIR/voices"
+CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
+STATS_FILE="$CHEERER_DATA_DIR/stats.json"
 
 # ── 5. Resolve configuration ─────────────────────────────
 # Priority: explicit CHEERER_* env > CLAUDE_PLUGIN_OPTION_* (userConfig) > defaults
@@ -109,9 +111,43 @@ if [[ -f "$COOLDOWN_FILE" ]]; then
 fi
 echo "$CURRENT_TIME" > "$COOLDOWN_FILE" 2>/dev/null || true
 
+MILESTONE_MSG=""
+{
+  mkdir -p "$CHEERER_DATA_DIR"
+  if [[ ! -f "$STATS_FILE" ]]; then
+    printf '{"total_triggers":0,"last_trigger":"","milestones":[]}\n' > "$STATS_FILE"
+  fi
+
+  STATS_JSON=$(cat "$STATS_FILE" 2>/dev/null)
+  TOTAL_TRIGGERS=$(printf '%s' "$STATS_JSON" | grep -o '"total_triggers":[0-9]*' | cut -d: -f2)
+  [[ "$TOTAL_TRIGGERS" =~ ^[0-9]+$ ]] || TOTAL_TRIGGERS=0
+  TOTAL_TRIGGERS=$((TOTAL_TRIGGERS + 1))
+
+  LAST_TRIGGER=$(date -Iseconds 2>/dev/null || date)
+  MILESTONES_JSON=$(printf '%s' "$STATS_JSON" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)
+  [[ -n "$MILESTONES_JSON" ]] || MILESTONES_JSON='[]'
+
+  for milestone in 10 25 50 100 250 500 1000; do
+    if [[ "$TOTAL_TRIGGERS" -eq "$milestone" ]]; then
+      MILESTONE_MSG="🏆 Trigger #$TOTAL_TRIGGERS!"
+      if [[ "$MILESTONES_JSON" == "[]" ]]; then
+        MILESTONES_JSON="[$TOTAL_TRIGGERS]"
+      else
+        MILESTONES_JSON="${MILESTONES_JSON%]},$TOTAL_TRIGGERS]"
+      fi
+      break
+    fi
+  done
+
+  printf '{"total_triggers":%s,"last_trigger":"%s","milestones":%s}\n' \
+    "$TOTAL_TRIGGERS" "$LAST_TRIGGER" "$MILESTONES_JSON" > "$STATS_FILE"
+} 2>/dev/null || true
+
 # ── 8. Select animation ───────────────────────────────────
 ANIMS=(basketball dance fireworks)
-if [[ "$CHEERER_ANIM" == "random" ]] || [[ -z "$CHEERER_ANIM" ]]; then
+if [[ -n "$MILESTONE_MSG" ]]; then
+  ANIM="fireworks"
+elif [[ "$CHEERER_ANIM" == "random" ]] || [[ -z "$CHEERER_ANIM" ]]; then
   ANIM="${ANIMS[$((RANDOM % ${#ANIMS[@]}))]}"
 else
   ANIM="$CHEERER_ANIM"
@@ -133,15 +169,19 @@ fi
 
 # ── 10. Voice / text encouragement ────────────────────────
 VOICE_SCRIPT="$VOICE_DIR/cheer_${CHEERER_LANG}.sh"
+FALLBACK_MSG="Great work! Task complete!"
+if [[ -n "$MILESTONE_MSG" ]]; then
+  FALLBACK_MSG="$FALLBACK_MSG $MILESTONE_MSG"
+fi
 
 if [[ -f "$VOICE_SCRIPT" ]]; then
-  CHEERER_VOICE="$CHEERER_VOICE" CHEERER_DUMB="$CHEERER_DUMB" bash "$VOICE_SCRIPT"
+  CHEERER_VOICE="$CHEERER_VOICE" CHEERER_DUMB="$CHEERER_DUMB" CHEERER_MILESTONE_MSG="$MILESTONE_MSG" bash "$VOICE_SCRIPT"
 else
   # Fallback
   if [[ "$CHEERER_DUMB" == "true" ]]; then
-    echo "Great work! Task complete!"
+    echo "$FALLBACK_MSG"
   else
-    echo -e "\033[1;32m🎉 Great work! Task complete!\033[0m"
+    echo -e "\033[1;32m🎉 $FALLBACK_MSG\033[0m"
   fi
 fi
 
