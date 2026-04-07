@@ -41,10 +41,13 @@ if [[ "$CHEERER_ENABLED" == "false" ]]; then
   exit 0
 fi
 
-# ── 2. Redirect stdout → /dev/tty ────────────────────────
+# ── 2. Redirect stdout → terminal ────────────────────────
 # Claude Code suppresses hook stdout. Force output to terminal.
-if [[ ! -t 1 ]] && { exec 3>/dev/tty; } 2>/dev/null; then
-  exec 1>/dev/tty 3>&-
+if [[ ! -t 1 ]]; then
+  _TTY=$(tty 2>/dev/null) || _TTY=/dev/tty
+  if [[ -w "$_TTY" ]]; then
+    exec 1>"$_TTY"
+  fi
 fi
 
 # ── 3. Drain stdin (hook event JSON) ─────────────────────
