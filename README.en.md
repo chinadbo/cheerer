@@ -22,19 +22,23 @@ After Claude Code finishes a task, your terminal instantly plays a short pixel a
 
 ## 📦 Installation
 
-### Method 1: Claude Code plugin (recommended)
+### Method 1: Add cheerer as a marketplace (recommended)
+
+Add this repo as a plugin marketplace, then install the `cheerer` plugin from it:
 
 ```bash
-claude plugin install github:chinadbo/cheerer
+claude plugin marketplace add chinadbo/cheerer
+claude plugin install cheerer@cheerer
 ```
 
 Or inside a Claude Code session:
 
 ```text
-/plugin install github:chinadbo/cheerer
+/plugin marketplace add chinadbo/cheerer
+/plugin install cheerer@cheerer
 ```
 
-The plugin registers the hooks automatically.
+Run `/reload-plugins` if you install it during an active session.
 
 ### Method 2: Manual hook setup
 

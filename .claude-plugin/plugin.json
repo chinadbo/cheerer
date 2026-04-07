@@ -10,17 +10,22 @@
   "repository": "https://github.com/chinadbo/cheerer",
   "license": "MIT",
   "keywords": ["encouragement", "animation", "hooks", "terminal", "fun"],
-  "hooks": "./hooks/hooks.json",
   "userConfig": {
     "lang": {
+      "type": "string",
+      "title": "Voice language",
       "description": "Voice language for encouragement messages (zh / en / ja, default: zh)",
       "sensitive": false
     },
     "anim": {
+      "type": "string",
+      "title": "Animation style",
       "description": "Animation style (random / basketball / dance / fireworks / epic, default: random)",
       "sensitive": false
     },
     "voice": {
+      "type": "string",
+      "title": "Voice output",
       "description": "Enable voice output (on / off / true / false, default: on)",
       "sensitive": false
     }

@@ -1,0 +1,16 @@
+{
+  "name": "cheerer",
+  "owner": {
+    "name": "chinadbo"
+  },
+  "metadata": {
+    "description": "Cheerer plugin marketplace"
+  },
+  "plugins": [
+    {
+      "name": "cheerer",
+      "source": "./",
+      "description": "Plays pixel animations and multilingual voice encouragement when Claude Code finishes a task."
+    }
+  ]
+}

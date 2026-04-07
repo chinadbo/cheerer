@@ -24,21 +24,23 @@
 
 ## 📦 安装
 
-### 方式一：Claude Code Plugin（一行命令，推荐）⭐
+### 方式一：将 cheerer 作为 Marketplace 添加（推荐）⭐
 
-需要 Claude Code。直接从 GitHub 安装，无需手动克隆：
+需要 Claude Code。先把这个仓库添加为插件 Marketplace，再从该 Marketplace 安装 `cheerer` 插件：
 
 ```bash
-claude plugin install github:chinadbo/cheerer
+claude plugin marketplace add chinadbo/cheerer
+claude plugin install cheerer@cheerer
 ```
 
 或在 Claude Code 会话中：
 
-```
-/plugin install github:chinadbo/cheerer
+```text
+/plugin marketplace add chinadbo/cheerer
+/plugin install cheerer@cheerer
 ```
 
-安装后自动注册 Hook，立即生效。
+如果是在当前会话中安装，随后执行 `/reload-plugins`。
 
 ### 方式二：Plugin Marketplace（团队使用）
 
