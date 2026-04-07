@@ -61,6 +61,7 @@ ANIM_DIR="$SCRIPT_DIR/animations"
 VOICE_DIR="$SCRIPT_DIR/voices"
 CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
 STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+CUSTOM_MESSAGES_FILE="$CHEERER_DATA_DIR/custom-messages.txt"
 
 # ── 5. Resolve configuration ─────────────────────────────
 # Priority: explicit CHEERER_* env > CLAUDE_PLUGIN_OPTION_* (userConfig) > defaults
@@ -68,6 +69,7 @@ CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
 CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
 CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
 CHEERER_MODE="${CHEERER_MODE:-auto}"
+CHEERER_CUSTOM_ONLY="${CHEERER_CUSTOM_ONLY:-false}"
 CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
 # minimum 1s prevents dual-trigger from Stop+TaskCompleted firing simultaneously
 EFFECTIVE_COOLDOWN=$(( CHEERER_COOLDOWN > 1 ? CHEERER_COOLDOWN : 1 ))
@@ -143,6 +145,22 @@ MILESTONE_MSG=""
     "$TOTAL_TRIGGERS" "$LAST_TRIGGER" "$MILESTONES_JSON" > "$STATS_FILE"
 } 2>/dev/null || true
 
+CUSTOM_MSGS=()
+if [[ -f "$CUSTOM_MESSAGES_FILE" ]]; then
+  while IFS= read -r custom_msg; do
+    [[ -z "$custom_msg" ]] && continue
+    [[ "$custom_msg" == \#* ]] && continue
+    CUSTOM_MSGS+=("$custom_msg")
+  done < "$CUSTOM_MESSAGES_FILE"
+fi
+
+CHEERER_CUSTOM_MSG=""
+if (( ${#CUSTOM_MSGS[@]} > 0 )); then
+  if [[ "$CHEERER_CUSTOM_ONLY" == "true" ]] || [[ $((RANDOM % 2)) -eq 0 ]]; then
+    CHEERER_CUSTOM_MSG="${CUSTOM_MSGS[$((RANDOM % ${#CUSTOM_MSGS[@]}))]}"
+  fi
+fi
+
 # ── 8. Select animation ───────────────────────────────────
 ANIMS=(basketball dance fireworks)
 if [[ -n "$MILESTONE_MSG" ]]; then
@@ -175,7 +193,7 @@ if [[ -n "$MILESTONE_MSG" ]]; then
 fi
 
 if [[ -f "$VOICE_SCRIPT" ]]; then
-  CHEERER_VOICE="$CHEERER_VOICE" CHEERER_DUMB="$CHEERER_DUMB" CHEERER_MILESTONE_MSG="$MILESTONE_MSG" bash "$VOICE_SCRIPT"
+  CHEERER_VOICE="$CHEERER_VOICE" CHEERER_DUMB="$CHEERER_DUMB" CHEERER_MILESTONE_MSG="$MILESTONE_MSG" CHEERER_CUSTOM_MSG="$CHEERER_CUSTOM_MSG" bash "$VOICE_SCRIPT"
 else
   # Fallback
   if [[ "$CHEERER_DUMB" == "true" ]]; then

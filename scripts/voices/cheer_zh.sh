@@ -26,7 +26,11 @@ MESSAGES=(
   "又一个 TODO 变成了 DONE，待办列表在颤抖！"
 )
 
-MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+if [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
+  MSG="$CHEERER_CUSTOM_MSG"
+else
+  MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+fi
 if [[ -n "${CHEERER_MILESTONE_MSG:-}" ]]; then
   MSG="$MSG ${CHEERER_MILESTONE_MSG}"
 fi

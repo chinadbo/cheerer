@@ -26,7 +26,11 @@ MESSAGES=(
   "Zero warnings, zero errors. Your compiler is proud of you."
 )
 
-MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+if [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
+  MSG="$CHEERER_CUSTOM_MSG"
+else
+  MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
+fi
 if [[ -n "${CHEERER_MILESTONE_MSG:-}" ]]; then
   MSG="$MSG ${CHEERER_MILESTONE_MSG}"
 fi
