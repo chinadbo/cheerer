@@ -4,6 +4,10 @@
 ![Shell](https://img.shields.io/badge/Shell-Bash-89e051?logo=gnu-bash&logoColor=white)
 ![GitHub Repo stars](https://img.shields.io/github/stars/chinadbo/cheerer?style=social)
 
+
+**言語：** [English](README.md) | [中文](README.zh.md) | 日本語
+
+
 Claude Code がタスクを完了すると、cheerer はターミナルでピクセルアニメーションと多言語の音声応援を再生し、コーディングをもっと楽しくします。
 
 ## ✨ 主な機能

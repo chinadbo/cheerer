@@ -1,38 +1,41 @@
-# 🎉 cheerer — Claude Code 鼓励师
+# 🎉 cheerer — Claude Code Cheer Plugin
 
 ![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Shell](https://img.shields.io/badge/Shell-Bash-89e051?logo=gnu-bash&logoColor=white)
 ![GitHub Repo stars](https://img.shields.io/github/stars/chinadbo/cheerer?style=social)
 
-每当 Claude Code 完成任务时，在终端播放像素动画 + 多语言语音鼓励，让编码更快乐！
 
-## ✨ 功能
+**Language:** English | [中文](README.zh.md) | [日本語](README.ja.md)
 
-- 🏀 投篮像素动画（帧动画，ANSI 字符艺术）
-- 💃 二次元跳舞动画
-- 🎆 烟花爆炸动画
-- 🔊 多语言语音鼓励（中文 / 英文 / 日文）
-- 🎲 随机选择动画 + 语言，每次都不一样
+Whenever Claude Code finishes a task, cheerer plays a pixel-style terminal animation and a multilingual voice encouragement to make coding more fun.
 
-## 🎬 演示说明
+## ✨ Features
 
-当 Claude Code 完成任务后，终端会即时播放一段像素动画，并用对应语言送上一句鼓励。这里先保留文字说明占位，后续会补充 GIF 演示。
+- 🏀 Basketball pixel animation with ANSI frame rendering
+- 💃 Dancing pixel animation
+- 🎆 Fireworks animation
+- 🔊 Multilingual voice encouragement (Chinese / English / Japanese)
+- 🎲 Random animation and language selection for a different experience each time
 
-## 📦 安装
+## 🎬 Demo Preview
 
-### 方式一：Claude Code 插件（推荐）
+After Claude Code finishes a task, your terminal instantly plays a short pixel animation and a matching voice encouragement. This is a text placeholder for now — a GIF demo will be added later.
+
+## 📦 Installation
+
+### Method 1: Claude Code plugin (recommended)
 
 ```bash
-# 克隆到本地
+# Clone the repository
 git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
 
-# 给主脚本和子目录脚本加执行权限
+# Make the main script and subdirectory scripts executable
 chmod +x ~/.cheerer/scripts/cheer.sh
 chmod +x ~/.cheerer/scripts/animations/*.sh
 chmod +x ~/.cheerer/scripts/voices/*.sh
 ```
 
-在 Claude Code 的 `~/.claude/settings.json` 中配置 hooks：
+Configure hooks in Claude Code `~/.claude/settings.json`:
 
 ```json
 {
@@ -61,9 +64,9 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 }
 ```
 
-### 方式二：手动 Hook（适合本地测试）
+### Method 2: Manual hook setup (for local testing)
 
-如果你不是按 `~/.cheerer` 安装，也可以把脚本路径替换成你自己的本地路径，然后在 `~/.claude/settings.json` 中这样配置：
+If you install cheerer somewhere other than `~/.cheerer`, replace the command path with your local path and add this to `~/.claude/settings.json`:
 
 ```json
 {
@@ -92,29 +95,29 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 }
 ```
 
-## 🚀 使用方法
+## 🚀 Usage
 
-### 直接运行（测试）
+### Run directly (for testing)
 
 ```bash
-# 随机动画 + 中文鼓励
+# Random animation + Chinese encouragement
 ./scripts/cheer.sh
 
-# 指定语言
-./scripts/cheer.sh en    # 英文
-./scripts/cheer.sh zh    # 中文（默认）
-./scripts/cheer.sh ja    # 日文
+# Choose a language
+./scripts/cheer.sh en    # English
+./scripts/cheer.sh zh    # Chinese (default)
+./scripts/cheer.sh ja    # Japanese
 
-# 指定动画（环境变量）
+# Choose an animation with env vars
 CHEERER_ANIM=basketball ./scripts/cheer.sh
 CHEERER_ANIM=dance ./scripts/cheer.sh
 CHEERER_ANIM=fireworks ./scripts/cheer.sh
 
-# 指定语言（环境变量，优先级最高）
+# Choose language with env vars (highest priority)
 CHEERER_LANG=en ./scripts/cheer.sh
 ```
 
-### 单独运行动画
+### Run animations individually
 
 ```bash
 bash scripts/animations/basketball.sh
@@ -122,7 +125,7 @@ bash scripts/animations/dance.sh
 bash scripts/animations/fireworks.sh
 ```
 
-### 单独运行语音
+### Run voice scripts individually
 
 ```bash
 bash scripts/voices/cheer_zh.sh
@@ -130,61 +133,61 @@ bash scripts/voices/cheer_en.sh
 bash scripts/voices/cheer_ja.sh
 ```
 
-## ⚙️ 环境变量
+## ⚙️ Environment Variables
 
-| 变量 | 说明 | 可选值 |
+| Variable | Description | Values |
 |------|------|--------|
-| `CHEERER_LANG` | 语言（优先级高于参数） | `zh` / `en` / `ja` |
-| `CHEERER_ANIM` | 指定动画（不设则随机） | `basketball` / `dance` / `fireworks` |
-| `CHEERER_ENABLED` | 总开关 | `true` / `false` |
-| `CHEERER_VOICE` | 是否启用语音 | `on` / `off` / `true` / `false` |
-| `CHEERER_COOLDOWN` | 两次触发之间的冷却秒数 | 正整数 |
+| `CHEERER_LANG` | Language (higher priority than CLI args) | `zh` / `en` / `ja` |
+| `CHEERER_ANIM` | Force a specific animation | `basketball` / `dance` / `fireworks` |
+| `CHEERER_ENABLED` | Master switch | `true` / `false` |
+| `CHEERER_VOICE` | Enable or disable voice | `on` / `off` / `true` / `false` |
+| `CHEERER_COOLDOWN` | Cooldown seconds between triggers | positive integer |
 
-## 🛠️ 技术实现
+## 🛠️ Technical Notes
 
-- **纯 Shell 实现**，零外部依赖
-- **ANSI escape code** 控制颜色 + 光标位置
-- **帧动画**：利用光标回退 (`\033[11A`) 原位重绘
-- **语音降级**：macOS `say` → `espeak` → 纯文字
-- **动画时长**：约 2~3 秒，不阻塞工作流
-- **终端兼容**：自动识别 dumb terminal 并降级输出
+- **Pure Shell implementation** with zero runtime dependencies
+- **ANSI escape codes** for colors and cursor movement
+- **Frame animation** rendered in place with cursor rewind (`\033[11A`)
+- **Voice fallback**: macOS `say` → `espeak` → plain text
+- **Animation duration**: around 2–3 seconds, designed not to interrupt your workflow
+- **Terminal compatibility**: automatically detects dumb terminals and falls back gracefully
 
-## 📁 目录结构
+## 📁 Directory Structure
 
 ```text
 cheerer/
 ├── .claude-plugin/
-│   └── plugin.json          # 插件 manifest
+│   └── plugin.json          # Plugin manifest
 ├── hooks/
-│   └── hooks.json           # Hook 配置
+│   └── hooks.json           # Hook configuration
 ├── scripts/
-│   ├── cheer.sh             # 主入口（随机动画 + 语言）
+│   ├── cheer.sh             # Main entry point (random animation + language)
 │   ├── animations/
-│   │   ├── basketball.sh    # 投篮像素动画
-│   │   ├── dance.sh         # 二次元跳舞
-│   │   └── fireworks.sh     # 烟花
+│   │   ├── basketball.sh    # Basketball animation
+│   │   ├── dance.sh         # Dancing animation
+│   │   └── fireworks.sh     # Fireworks animation
 │   └── voices/
-│       ├── cheer_zh.sh      # 中文鼓励
-│       ├── cheer_en.sh      # 英文鼓励
-│       └── cheer_ja.sh      # 日文鼓励
+│       ├── cheer_zh.sh      # Chinese encouragement
+│       ├── cheer_en.sh      # English encouragement
+│       └── cheer_ja.sh      # Japanese encouragement
 ├── README.md
 ├── README.en.md
 └── README.ja.md
 ```
 
-## 🔧 自定义扩展
+## 🔧 Customization
 
-### 添加新动画
+### Add a new animation
 
-1. 在 `scripts/animations/` 创建新的 `.sh` 文件
-2. 在 `scripts/cheer.sh` 的 `ANIMS` 数组中加入名称
-3. 运行 `bash scripts/cheer.sh test` 验证脚本可正常执行
+1. Create a new `.sh` file in `scripts/animations/`
+2. Add the animation name to the `ANIMS` array in `scripts/cheer.sh`
+3. Run `bash scripts/cheer.sh test` to verify it works
 
-### 添加新语言
+### Add a new language
 
-1. 在 `scripts/voices/` 创建 `cheer_XX.sh`
-2. 在 `scripts/cheer.sh` 中添加对应语言处理
-3. 运行 `bash scripts/cheer.sh test` 验证输出
+1. Create `cheer_XX.sh` in `scripts/voices/`
+2. Add the matching language handling in `scripts/cheer.sh`
+3. Run `bash scripts/cheer.sh test` to verify the output
 
 ## 📝 License
 

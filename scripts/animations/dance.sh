@@ -8,7 +8,6 @@ PINK="\033[38;5;213m"
 CYAN="\033[96m"
 YELLOW="\033[38;5;226m"
 MAGENTA="\033[35m"
-GREEN="\033[32m"
 BOLD="\033[1m"
 GRAY="\033[90m"
 
@@ -16,7 +15,6 @@ GRAY="\033[90m"
 tput civis 2>/dev/null || true
 trap 'tput cnorm 2>/dev/null || true' EXIT
 
-FRAME_LINES=10
 DELAY=0.2
 
 # ── 帧1：初始姿势，双臂水平 ────────────────────────────

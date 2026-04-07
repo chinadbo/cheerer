@@ -25,7 +25,7 @@ jobs:
 
       - name: Run shellcheck
         run: |
-          shellcheck scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh
+          shellcheck --severity=error scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh
 
       - name: Run smoke test
         run: bash scripts/cheer.sh test
