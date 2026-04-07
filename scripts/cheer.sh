@@ -17,6 +17,7 @@
 # │                                   fireworks|                     │
 # │                                   random                         │
 # │  CHEERER_VOICE     voice toggle   on|off          default: on    │
+# │  CHEERER_MODE      output mode    auto|full|text  default: auto  │
 # │  CHEERER_COOLDOWN  cooldown (sec) positive int    default: 3     │
 # │                                                                  │
 # │  userConfig values (set during /plugin enable cheerer):          │
@@ -29,8 +30,7 @@
 # │  State tracked via /tmp/cheerer_last_trigger                     │
 # └──────────────────────────────────────────────────────────────────┘
 #
-# Hook event JSON is available via stdin (currently read but unused;
-# reserved for future use, e.g. showing session info in messages).
+# Hook event JSON is available via stdin and used for mode selection.
 
 # Always exit 0 — never let cheerer errors affect Claude Code
 set +e
@@ -52,8 +52,8 @@ fi
 
 # ── 3. Drain stdin (hook event JSON) ─────────────────────
 # Claude Code passes event data as JSON on stdin.
-# We read it to prevent "broken pipe" but don't use it yet.
 if read -r -t 0.1 _HOOK_EVENT 2>/dev/null; then :; fi
+HOOK_EVENT=$(printf '%s' "$_HOOK_EVENT" | grep -o '"hook_event_name"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
 
 # ── 4. Script paths ───────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -65,6 +65,7 @@ VOICE_DIR="$SCRIPT_DIR/voices"
 CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
 CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
 CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
+CHEERER_MODE="${CHEERER_MODE:-auto}"
 CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
 # minimum 1s prevents dual-trigger from Stop+TaskCompleted firing simultaneously
 EFFECTIVE_COOLDOWN=$(( CHEERER_COOLDOWN > 1 ? CHEERER_COOLDOWN : 1 ))
@@ -73,6 +74,11 @@ EFFECTIVE_COOLDOWN=$(( CHEERER_COOLDOWN > 1 ? CHEERER_COOLDOWN : 1 ))
 case "$CHEERER_LANG" in
   zh|en|ja) ;;
   *) CHEERER_LANG="zh" ;;
+esac
+
+case "$CHEERER_MODE" in
+  auto|full|text) ;;
+  *) CHEERER_MODE="auto" ;;
 esac
 
 # ── 6. Dumb terminal detection ────────────────────────────
@@ -111,9 +117,15 @@ else
   ANIM="$CHEERER_ANIM"
 fi
 ANIM_SCRIPT="$ANIM_DIR/$ANIM.sh"
+PLAY_ANIMATION=true
+if [[ "$CHEERER_MODE" == "text" ]]; then
+  PLAY_ANIMATION=false
+elif [[ "$HOOK_EVENT" == "Stop" ]] && [[ "$CHEERER_MODE" != "full" ]]; then
+  PLAY_ANIMATION=false
+fi
 
 # ── 9. Play animation ─────────────────────────────────────
-if [[ "$IN_COOLDOWN" == "false" ]] && [[ "$CHEERER_DUMB" == "false" ]]; then
+if [[ "$PLAY_ANIMATION" == "true" ]] && [[ "$IN_COOLDOWN" == "false" ]] && [[ "$CHEERER_DUMB" == "false" ]]; then
   if [[ -f "$ANIM_SCRIPT" ]]; then
     bash "$ANIM_SCRIPT"
   fi
