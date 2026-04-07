@@ -66,6 +66,8 @@ CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
 CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
 CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
 CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
+# minimum 1s prevents dual-trigger from Stop+TaskCompleted firing simultaneously
+EFFECTIVE_COOLDOWN=$(( CHEERER_COOLDOWN > 1 ? CHEERER_COOLDOWN : 1 ))
 
 # Validate language
 case "$CHEERER_LANG" in
@@ -94,7 +96,7 @@ if [[ -f "$COOLDOWN_FILE" ]]; then
   LAST_RUN=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo 0)
   if [[ -n "$LAST_RUN" ]] && [[ "$LAST_RUN" =~ ^[0-9]+$ ]]; then
     DIFF=$(( CURRENT_TIME - LAST_RUN ))
-    if [[ "$DIFF" -lt "$CHEERER_COOLDOWN" ]] 2>/dev/null; then
+    if [[ "$DIFF" -lt "$EFFECTIVE_COOLDOWN" ]] 2>/dev/null; then
       IN_COOLDOWN=true
     fi
   fi
