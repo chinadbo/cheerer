@@ -1,12 +1,25 @@
 {
-  "hooks": [
-    {
-      "event": "Stop",
-      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh"
-    },
-    {
-      "event": "TaskCompleted",
-      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh"
-    }
-  ]
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh"
+          }
+        ]
+      }
+    ]
+  }
 }

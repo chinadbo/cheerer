@@ -24,19 +24,59 @@
 
 ## 📦 安装
 
-### 方式一：Claude Code 插件（推荐）
+### 方式一：Claude Code Plugin（一行命令，推荐）⭐
+
+需要 Claude Code。直接从 GitHub 安装，无需手动克隆：
 
 ```bash
-# 克隆到本地
-git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
+claude plugin install github:chinadbo/cheerer
+```
 
-# 给主脚本和子目录脚本加执行权限
+或在 Claude Code 会话中：
+
+```
+/plugin install github:chinadbo/cheerer
+```
+
+安装后自动注册 Hook，立即生效。
+
+### 方式二：Plugin Marketplace（团队使用）
+
+在你的 `marketplace.json` 中加入 cheerer：
+
+```json
+{
+  "name": "your-marketplace",
+  "plugins": [
+    {
+      "name": "cheerer",
+      "source": {
+        "source": "github",
+        "repo": "chinadbo/cheerer"
+      },
+      "description": "任务完成时播放像素动画 + 语音鼓励"
+    }
+  ]
+}
+```
+
+或直接将 chinadbo/cheerer 作为单插件 Marketplace 添加：
+
+```bash
+claude plugin marketplace add chinadbo/cheerer
+claude plugin install cheerer@cheerer
+```
+
+### 方式三：手动 Hook（不使用 Claude Code 插件系统）
+
+```bash
+git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
 chmod +x ~/.cheerer/scripts/cheer.sh
 chmod +x ~/.cheerer/scripts/animations/*.sh
 chmod +x ~/.cheerer/scripts/voices/*.sh
 ```
 
-在 Claude Code 的 `~/.claude/settings.json` 中配置 hooks：
+在 `~/.claude/settings.json` 中添加：
 
 ```json
 {
@@ -50,88 +90,9 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
           }
         ]
       }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
     ]
   }
 }
-```
-
-### 方式二：手动 Hook（适合本地测试）
-
-如果你不是按 `~/.cheerer` 安装，也可以把脚本路径替换成你自己的本地路径，然后在 `~/.claude/settings.json` 中这样配置：
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-## 🚀 使用方法
-
-### 直接运行（测试）
-
-```bash
-# 随机动画 + 中文鼓励
-./scripts/cheer.sh
-
-# 指定语言
-./scripts/cheer.sh en    # 英文
-./scripts/cheer.sh zh    # 中文（默认）
-./scripts/cheer.sh ja    # 日文
-
-# 指定动画（环境变量）
-CHEERER_ANIM=basketball ./scripts/cheer.sh
-CHEERER_ANIM=dance ./scripts/cheer.sh
-CHEERER_ANIM=fireworks ./scripts/cheer.sh
-
-# 指定语言（环境变量，优先级最高）
-CHEERER_LANG=en ./scripts/cheer.sh
-```
-
-### 单独运行动画
-
-```bash
-bash scripts/animations/basketball.sh
-bash scripts/animations/dance.sh
-bash scripts/animations/fireworks.sh
-```
-
-### 单独运行语音
-
-```bash
-bash scripts/voices/cheer_zh.sh
-bash scripts/voices/cheer_en.sh
-bash scripts/voices/cheer_ja.sh
 ```
 
 ## ⚙️ 环境变量

@@ -23,19 +23,59 @@ After Claude Code finishes a task, your terminal instantly plays a short pixel a
 
 ## 📦 Installation
 
-### Method 1: Claude Code plugin (recommended)
+### Method 1: Claude Code Plugin (one command — recommended) ⭐
+
+Requires Claude Code. Installs directly from GitHub — no cloning needed:
 
 ```bash
-# Clone the repository
-git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
+claude plugin install github:chinadbo/cheerer
+```
 
-# Make the main script and subdirectory scripts executable
+Or from inside a Claude Code session:
+
+```
+/plugin install github:chinadbo/cheerer
+```
+
+That's it. cheerer auto-registers the hooks and starts working immediately.
+
+### Method 2: Plugin Marketplace (for teams)
+
+If you manage a team marketplace, add cheerer as an entry in your `marketplace.json`:
+
+```json
+{
+  "name": "your-marketplace",
+  "plugins": [
+    {
+      "name": "cheerer",
+      "source": {
+        "source": "github",
+        "repo": "chinadbo/cheerer"
+      },
+      "description": "Pixel animations + voice encouragement when tasks complete"
+    }
+  ]
+}
+```
+
+Or add chinadbo/cheerer directly as a single-plugin marketplace:
+
+```bash
+claude plugin marketplace add chinadbo/cheerer
+claude plugin install cheerer@cheerer
+```
+
+### Method 3: Manual hook setup (no Claude Code plugin system)
+
+```bash
+git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
 chmod +x ~/.cheerer/scripts/cheer.sh
 chmod +x ~/.cheerer/scripts/animations/*.sh
 chmod +x ~/.cheerer/scripts/voices/*.sh
 ```
 
-Configure hooks in Claude Code `~/.claude/settings.json`:
+Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -49,88 +89,9 @@ Configure hooks in Claude Code `~/.claude/settings.json`:
           }
         ]
       }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
     ]
   }
 }
-```
-
-### Method 2: Manual hook setup (for local testing)
-
-If you install cheerer somewhere other than `~/.cheerer`, replace the command path with your local path and add this to `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-## 🚀 Usage
-
-### Run directly (for testing)
-
-```bash
-# Random animation + Chinese encouragement
-./scripts/cheer.sh
-
-# Choose a language
-./scripts/cheer.sh en    # English
-./scripts/cheer.sh zh    # Chinese (default)
-./scripts/cheer.sh ja    # Japanese
-
-# Choose an animation with env vars
-CHEERER_ANIM=basketball ./scripts/cheer.sh
-CHEERER_ANIM=dance ./scripts/cheer.sh
-CHEERER_ANIM=fireworks ./scripts/cheer.sh
-
-# Choose language with env vars (highest priority)
-CHEERER_LANG=en ./scripts/cheer.sh
-```
-
-### Run animations individually
-
-```bash
-bash scripts/animations/basketball.sh
-bash scripts/animations/dance.sh
-bash scripts/animations/fireworks.sh
-```
-
-### Run voice scripts individually
-
-```bash
-bash scripts/voices/cheer_zh.sh
-bash scripts/voices/cheer_en.sh
-bash scripts/voices/cheer_ja.sh
 ```
 
 ## ⚙️ Environment Variables

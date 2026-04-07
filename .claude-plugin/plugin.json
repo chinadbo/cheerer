@@ -1,9 +1,12 @@
 {
   "name": "cheerer",
   "version": "1.0.0",
-  "description": "Claude Code 鼓励师 — 任务完成时播放像素动画 + 语音鼓励",
+  "description": "Plays pixel animations and multilingual voice encouragement when Claude Code finishes a task.",
   "author": "chinadbo",
   "homepage": "https://github.com/chinadbo/cheerer",
-  "hooks": "./hooks/hooks.json",
-  "license": "MIT"
+  "repository": "https://github.com/chinadbo/cheerer",
+  "license": "MIT",
+  "keywords": ["encouragement", "animation", "hooks", "terminal", "fun"],
+  "category": "productivity",
+  "hooks": "./hooks/hooks.json"
 }
