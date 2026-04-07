@@ -86,7 +86,7 @@ fi
 export CHEERER_DUMB
 
 # ── 7. Cooldown check ─────────────────────────────────────
-COOLDOWN_FILE="/tmp/cheerer_last_trigger"
+COOLDOWN_FILE="/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}"
 IN_COOLDOWN=false
 CURRENT_TIME=$(date +%s 2>/dev/null || echo 0)
 
