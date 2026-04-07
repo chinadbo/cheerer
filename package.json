@@ -2,9 +2,33 @@
   "name": "cheerer",
   "version": "1.0.0",
   "description": "Claude Code 鼓励师 — 任务完成时播放像素动画 + 语音鼓励",
-  "author": "guli-swe",
+  "author": "chinadbo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chinadbo/cheerer.git"
+  },
+  "homepage": "https://github.com/chinadbo/cheerer",
+  "bugs": {
+    "url": "https://github.com/chinadbo/cheerer/issues"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "scripts/",
+    "hooks/",
+    ".claude-plugin/",
+    "README*.md"
+  ],
+  "hooks": "./hooks/hooks.json",
   "license": "MIT",
-  "keywords": ["claude-code", "plugin", "animation", "tts", "encouragement"],
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "animation",
+    "tts",
+    "encouragement"
+  ],
   "scripts": {
     "test": "bash scripts/cheer.sh",
     "test:basketball": "CHEERER_ANIM=basketball bash scripts/cheer.sh",

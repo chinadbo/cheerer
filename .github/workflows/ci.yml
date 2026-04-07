@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-test:
+    if: github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          shellcheck scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh
+
+      - name: Run smoke test
+        run: bash scripts/cheer.sh test
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | grep '^v' | grep -vx "${GITHUB_REF_NAME}" | head -n 1 || true)
+          {
+            echo 'CHANGELOG<<EOF'
+            echo '## Changes'
+            if [ -n "$PREV_TAG" ]; then
+              git log --pretty='- %s' "$PREV_TAG"..HEAD
+            else
+              git log --pretty='- %s'
+            fi
+            echo
+            echo '## CHANGELOG.md'
+            cat CHANGELOG.md
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.changelog.outputs.CHANGELOG }}
