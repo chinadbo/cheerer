@@ -13,12 +13,14 @@
 # │  CHEERER_ENABLED   master switch  true|false      default: true  │
 # │  CHEERER_LANG      language       zh|en|ja        default: zh    │
 # │  CHEERER_ANIM      animation      basketball|                    │
-# │                                   dance|          default: random│
-# │                                   fireworks|                     │
-# │                                   random                         │
+# │                                   dance|                        │
+# │                                   fireworks|                    │
+# │                                   epic|          default: random│
+# │                                   random                        │
 # │  CHEERER_VOICE     voice toggle   on|off          default: on    │
 # │  CHEERER_MODE      output mode    auto|full|text  default: auto  │
 # │  CHEERER_COOLDOWN  cooldown (sec) positive int    default: 3     │
+# │  CHEERER_EPIC_THRESHOLD threshold  positive int   default: 60    │
 # │                                                                  │
 # │  userConfig values (set during /plugin enable cheerer):          │
 # │    CLAUDE_PLUGIN_OPTION_LANG  → mapped to CHEERER_LANG           │
@@ -54,6 +56,7 @@ fi
 # Claude Code passes event data as JSON on stdin.
 if read -r -t 0.1 _HOOK_EVENT 2>/dev/null; then :; fi
 HOOK_EVENT=$(printf '%s' "$_HOOK_EVENT" | grep -o '"hook_event_name"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
+TASK_DURATION=$(printf "%s" "$_HOOK_EVENT" | grep -o 'duration_seconds:[0-9]*' | cut -d: -f2)
 
 # ── 4. Script paths ───────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -71,6 +74,7 @@ CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
 CHEERER_MODE="${CHEERER_MODE:-auto}"
 CHEERER_CUSTOM_ONLY="${CHEERER_CUSTOM_ONLY:-false}"
 CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
+CHEERER_EPIC_THRESHOLD="${CHEERER_EPIC_THRESHOLD:-60}"
 # minimum 1s prevents dual-trigger from Stop+TaskCompleted firing simultaneously
 EFFECTIVE_COOLDOWN=$(( CHEERER_COOLDOWN > 1 ? CHEERER_COOLDOWN : 1 ))
 
@@ -163,6 +167,13 @@ fi
 
 # ── 8. Select animation ───────────────────────────────────
 ANIMS=(basketball dance fireworks)
+RUN_EPIC=false
+if [[ "$CHEERER_EPIC" == "true" ]] || [[ "$CHEERER_ANIM" == "epic" ]]; then
+  RUN_EPIC=true
+elif [[ "$TASK_DURATION" =~ ^[0-9]+$ ]] && [[ "$TASK_DURATION" -ge "$CHEERER_EPIC_THRESHOLD" ]]; then
+  RUN_EPIC=true
+fi
+
 if [[ -n "$MILESTONE_MSG" ]]; then
   ANIM="fireworks"
 elif [[ "$CHEERER_ANIM" == "random" ]] || [[ -z "$CHEERER_ANIM" ]]; then
@@ -180,7 +191,13 @@ fi
 
 # ── 9. Play animation ─────────────────────────────────────
 if [[ "$PLAY_ANIMATION" == "true" ]] && [[ "$IN_COOLDOWN" == "false" ]] && [[ "$CHEERER_DUMB" == "false" ]]; then
-  if [[ -f "$ANIM_SCRIPT" ]]; then
+  if [[ "$RUN_EPIC" == "true" ]]; then
+    for epic_anim in basketball dance fireworks; do
+      if [[ -f "$ANIM_DIR/$epic_anim.sh" ]]; then
+        bash "$ANIM_DIR/$epic_anim.sh"
+      fi
+    done
+  elif [[ -f "$ANIM_SCRIPT" ]]; then
     bash "$ANIM_SCRIPT"
   fi
 fi

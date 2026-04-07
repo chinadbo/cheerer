@@ -6,4 +6,10 @@
 #   cheer --anim dance (specific animation)
 #   cheer --off     (disable voice)
 SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+if [[ "${1:-}" == "--epic" ]]; then
+  export CHEERER_EPIC=true
+  shift
+fi
+
 exec "$SCRIPT_DIR/scripts/cheer.sh" "$@"

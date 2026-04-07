@@ -17,7 +17,7 @@
       "sensitive": false
     },
     "anim": {
-      "description": "Animation style (random / basketball / dance / fireworks)",
+      "description": "Animation style (random / basketball / dance / fireworks / epic)",
       "sensitive": false
     },
     "voice": {
