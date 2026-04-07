@@ -39,7 +39,9 @@ shellcheck --severity=error \
   scripts/cheer.sh \
   scripts/animations/*.sh \
   scripts/voices/*.sh \
-  bin/cheer
+  bin/cheer \
+  scripts/check-secrets.sh \
+  scripts/install-hooks.sh
 ```
 
 All scripts must pass with **zero errors** at `--severity=error`.
@@ -79,7 +81,7 @@ Before opening a PR:
 
 ## Project Structure
 
-```
+```text
 cheerer/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest (name, version, userConfig, hooks path)
@@ -108,7 +110,7 @@ cheerer/
 2. **Never break Claude Code** — always `exit 0`, use `set +e`
 3. **Terminal-safe** — dumb terminal detection, cursor restore on `EXIT` trap
 4. **Non-blocking** — TTS runs in the background (`& disown`), animation finishes before voice starts
-5. **Cooldown-aware** — `/tmp/cheerer_last_trigger` prevents spam on rapid re-triggers
+5. **Cooldown-aware** — `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}` prevents same-session rapid re-trigger spam
 
 ## Code of Conduct
 

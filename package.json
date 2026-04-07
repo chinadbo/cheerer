@@ -11,14 +11,13 @@
   "bugs": {
     "url": "https://github.com/chinadbo/cheerer/issues"
   },
-  "engines": {
-    "node": ">=14"
-  },
   "files": [
+    "bin/",
     "scripts/",
     "hooks/",
     ".claude-plugin/",
-    "README*.md"
+    "README*.md",
+    "CONTRIBUTING.md"
   ],
   "hooks": "./hooks/hooks.json",
   "license": "MIT",
@@ -34,7 +33,7 @@
     "test:basketball": "CHEERER_ANIM=basketball bash scripts/cheer.sh",
     "test:dance": "CHEERER_ANIM=dance bash scripts/cheer.sh",
     "test:fireworks": "CHEERER_ANIM=fireworks bash scripts/cheer.sh",
-    "test:en": "bash scripts/cheer.sh en",
-    "install": "chmod +x scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh && echo '✅ 权限设置完成'"
+    "test:en": "CHEERER_LANG=en bash scripts/cheer.sh",
+    "install": "chmod +x bin/cheer scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh && echo '✅ 权限设置完成'"
   }
 }

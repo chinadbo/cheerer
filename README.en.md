@@ -8,11 +8,13 @@ Whenever Claude Code finishes a task, cheerer plays a pixel-style terminal anima
 
 ## ✨ Features
 
-- 🏀 Basketball pixel animation with ANSI frame rendering
-- 💃 Dancing pixel animation
-- 🎆 Fireworks animation
+- 🏀 Basketball, dance, and fireworks terminal animations
 - 🔊 Multilingual voice encouragement (Chinese / English / Japanese)
-- 🎲 Random animation and language selection for a different experience each time
+- 🎲 Random animation selection, or force a specific animation
+- 🚀 Epic mode that plays all three animations in sequence
+- 📊 Trigger stats and milestone celebrations (`--stats`, milestone fireworks)
+- 📝 Optional custom message pool loaded from `custom-messages.txt`
+- 🖥️ Automatic dumb-terminal fallback and session-scoped cooldown handling
 
 ## 🎬 Demo Preview
 
@@ -23,16 +25,28 @@ After Claude Code finishes a task, your terminal instantly plays a short pixel a
 ### Method 1: Claude Code plugin (recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
+claude plugin install github:chinadbo/cheerer
+```
 
-# Make the main script and subdirectory scripts executable
+Or inside a Claude Code session:
+
+```text
+/plugin install github:chinadbo/cheerer
+```
+
+The plugin registers the hooks automatically.
+
+### Method 2: Manual hook setup
+
+```bash
+git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
 chmod +x ~/.cheerer/scripts/cheer.sh
 chmod +x ~/.cheerer/scripts/animations/*.sh
 chmod +x ~/.cheerer/scripts/voices/*.sh
+chmod +x ~/.cheerer/bin/cheer
 ```
 
-Configure hooks in Claude Code `~/.claude/settings.json`:
+Configure hooks in `~/.claude/settings.json`:
 
 ```json
 {
@@ -42,7 +56,9 @@ Configure hooks in Claude Code `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/.cheerer/scripts/cheer.sh"
+            "command": "~/.cheerer/scripts/cheer.sh",
+            "async": true,
+            "statusMessage": "🎉 Cheering..."
           }
         ]
       }
@@ -52,38 +68,9 @@ Configure hooks in Claude Code `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/.cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### Method 2: Manual hook setup (for local testing)
-
-If you install cheerer somewhere other than `~/.cheerer`, replace the command path with your local path and add this to `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/cheerer/scripts/cheer.sh"
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/cheerer/scripts/cheer.sh"
+            "command": "~/.cheerer/scripts/cheer.sh",
+            "async": true,
+            "statusMessage": "🎉 Cheering..."
           }
         ]
       }
@@ -94,24 +81,29 @@ If you install cheerer somewhere other than `~/.cheerer`, replace the command pa
 
 ## 🚀 Usage
 
-### Run directly (for testing)
+### Run directly
 
 ```bash
-# Random animation + Chinese encouragement
-./scripts/cheer.sh
+# Random animation + default Chinese encouragement
+bash scripts/cheer.sh
 
-# Choose a language
-./scripts/cheer.sh en    # English
-./scripts/cheer.sh zh    # Chinese (default)
-./scripts/cheer.sh ja    # Japanese
+# Choose language with env vars
+CHEERER_LANG=en bash scripts/cheer.sh
+CHEERER_LANG=ja bash scripts/cheer.sh
 
-# Choose an animation with env vars
-CHEERER_ANIM=basketball ./scripts/cheer.sh
-CHEERER_ANIM=dance ./scripts/cheer.sh
-CHEERER_ANIM=fireworks ./scripts/cheer.sh
+# Choose animation with env vars
+CHEERER_ANIM=basketball bash scripts/cheer.sh
+CHEERER_ANIM=dance bash scripts/cheer.sh
+CHEERER_ANIM=fireworks bash scripts/cheer.sh
+CHEERER_ANIM=epic bash scripts/cheer.sh
 
-# Choose language with env vars (highest priority)
-CHEERER_LANG=en ./scripts/cheer.sh
+# Force text-only fallback
+CHEERER_DUMB=true bash scripts/cheer.sh
+CHEERER_MODE=text bash scripts/cheer.sh
+
+# Wrapper command
+bash bin/cheer --epic
+bash bin/cheer --stats
 ```
 
 ### Run animations individually
@@ -132,13 +124,38 @@ bash scripts/voices/cheer_ja.sh
 
 ## ⚙️ Environment Variables
 
-| Variable | Description | Values |
-|------|------|--------|
-| `CHEERER_LANG` | Language (higher priority than CLI args) | `zh` / `en` / `ja` |
-| `CHEERER_ANIM` | Force a specific animation | `basketball` / `dance` / `fireworks` |
-| `CHEERER_ENABLED` | Master switch | `true` / `false` |
-| `CHEERER_VOICE` | Enable or disable voice | `on` / `off` / `true` / `false` |
-| `CHEERER_COOLDOWN` | Cooldown seconds between triggers | positive integer |
+| Variable | Description | Values | Default |
+|------|------|--------|---------|
+| `CHEERER_ENABLED` | Master switch | `true` / `false` | `true` |
+| `CHEERER_LANG` | Voice language | `zh` / `en` / `ja` | `zh` |
+| `CHEERER_ANIM` | Animation style | `basketball` / `dance` / `fireworks` / `epic` / `random` | `random` |
+| `CHEERER_VOICE` | Enable or disable voice | `on` / `off` / `true` / `false` | `on` |
+| `CHEERER_DUMB` | Force text-only fallback or keep auto-detect | `auto` / `true` / `false` | `auto` |
+| `CHEERER_MODE` | Output mode | `auto` / `full` / `text` | `auto` |
+| `CHEERER_COOLDOWN` | Cooldown seconds between triggers | positive integer | `3` |
+| `CHEERER_EPIC_THRESHOLD` | Auto-enable epic mode at this task duration | positive integer | `60` |
+| `CHEERER_EPIC` | Force epic mode for one run | `true` / `false` | `false` |
+| `CHEERER_CUSTOM_ONLY` | Use only custom messages when available | `true` / `false` | `false` |
+
+`CHEERER_*` env vars override plugin settings.
+
+### Runtime behavior
+
+- `CHEERER_MODE=auto` keeps `Stop` hooks text-only and animates `TaskCompleted` hooks.
+- `CHEERER_MODE=full` always plays animation.
+- `CHEERER_MODE=text` always skips animation.
+- `CHEERER_ANIM=epic`, `CHEERER_EPIC=true`, or a task duration at or above `CHEERER_EPIC_THRESHOLD` plays all three animations in sequence.
+- `CHEERER_COOLDOWN` has an effective minimum of 1 second even if set to `0`.
+- Cooldown suppresses animation only; text/voice output still runs.
+
+## 📁 State and data files
+
+By default, cheerer stores plugin data in `${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}`:
+
+- `stats.json` — total triggers, last trigger time, milestone history
+- `custom-messages.txt` — optional custom encouragements, one message per line (`#` starts a comment)
+
+Cooldown state is tracked in `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}`.
 
 ## 🛠️ Technical Notes
 
@@ -155,10 +172,12 @@ bash scripts/voices/cheer_ja.sh
 cheerer/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest
+├── bin/
+│   └── cheer                # Wrapper command (--epic, --stats)
 ├── hooks/
 │   └── hooks.json           # Hook configuration
 ├── scripts/
-│   ├── cheer.sh             # Main entry point (random animation + language)
+│   ├── cheer.sh             # Main entry point (hooks + routing + stats)
 │   ├── animations/
 │   │   ├── basketball.sh    # Basketball animation
 │   │   ├── dance.sh         # Dancing animation
@@ -169,6 +188,7 @@ cheerer/
 │       └── cheer_ja.sh      # Japanese encouragement
 ├── README.md
 ├── README.en.md
+├── README.zh.md
 └── README.ja.md
 ```
 
@@ -178,13 +198,13 @@ cheerer/
 
 1. Create a new `.sh` file in `scripts/animations/`
 2. Add the animation name to the `ANIMS` array in `scripts/cheer.sh`
-3. Run `bash scripts/cheer.sh test` to verify it works
+3. Run `bash scripts/cheer.sh` or `CHEERER_ANIM=<name> bash scripts/cheer.sh` to verify it works
 
 ### Add a new language
 
 1. Create `cheer_XX.sh` in `scripts/voices/`
 2. Add the matching language handling in `scripts/cheer.sh`
-3. Run `bash scripts/cheer.sh test` to verify the output
+3. Run `CHEERER_LANG=<code> bash scripts/cheer.sh` to verify the output
 
 ## 📝 License
 

@@ -3,34 +3,29 @@
 # Triggered by Claude Code hooks on Stop / TaskCompleted events.
 # Plays a random pixel animation and multilingual voice encouragement.
 #
-# ┌──────────────────────────────────────────────────────────────────┐
-# │  Configuration: env vars or userConfig (set with /plugin enable) │
-# │                                                                  │
-# │  Source                      Variable               Default      │
-# │  userConfig (plugin enable)  CLAUDE_PLUGIN_OPTION_LANG    zh     │
-# │  manual env override         CHEERER_LANG               (same)   │
-# │                                                                  │
-# │  CHEERER_ENABLED   master switch  true|false      default: true  │
-# │  CHEERER_LANG      language       zh|en|ja        default: zh    │
-# │  CHEERER_ANIM      animation      basketball|                    │
-# │                                   dance|                        │
-# │                                   fireworks|                    │
-# │                                   epic|          default: random│
-# │                                   random                        │
-# │  CHEERER_VOICE     voice toggle   on|off          default: on    │
-# │  CHEERER_MODE      output mode    auto|full|text  default: auto  │
-# │  CHEERER_COOLDOWN  cooldown (sec) positive int    default: 3     │
-# │  CHEERER_EPIC_THRESHOLD threshold  positive int   default: 60    │
-# │                                                                  │
-# │  userConfig values (set during /plugin enable cheerer):          │
-# │    CLAUDE_PLUGIN_OPTION_LANG  → mapped to CHEERER_LANG           │
-# │    CLAUDE_PLUGIN_OPTION_ANIM  → mapped to CHEERER_ANIM           │
-# │    CLAUDE_PLUGIN_OPTION_VOICE → mapped to CHEERER_VOICE          │
-# │                                                                  │
-# │  Cooldown: if two triggers fire within CHEERER_COOLDOWN seconds, │
-# │  the second skips animation but still shows a text cheer.        │
-# │  State tracked via /tmp/cheerer_last_trigger                     │
-# └──────────────────────────────────────────────────────────────────┘
+# Configuration summary
+#   CHEERER_ENABLED        true|false                 default: true
+#   CHEERER_LANG           zh|en|ja                   default: zh
+#   CHEERER_ANIM           basketball|dance|fireworks|epic|random
+#   CHEERER_VOICE          on|off|true|false         default: on
+#   CHEERER_DUMB           auto|true|false           default: auto
+#   CHEERER_MODE           auto|full|text            default: auto
+#   CHEERER_COOLDOWN       positive integer          default: 3
+#   CHEERER_EPIC_THRESHOLD positive integer          default: 60
+#   CHEERER_CUSTOM_ONLY    true|false                default: false
+#
+# Plugin userConfig values map to:
+#   CLAUDE_PLUGIN_OPTION_LANG  -> CHEERER_LANG
+#   CLAUDE_PLUGIN_OPTION_ANIM  -> CHEERER_ANIM
+#   CLAUDE_PLUGIN_OPTION_VOICE -> CHEERER_VOICE
+#
+# Runtime notes
+#   - Cooldown file: /tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}
+#   - Data dir: ${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}
+#   - CHEERER_MODE=auto keeps Stop hooks text-only and animates TaskCompleted
+#   - CHEERER_ANIM=epic or CHEERER_EPIC=true runs all three animations
+#   - There is no `bash scripts/cheer.sh test` mode
+#   - bin/cheer supports: --epic, --stats
 #
 # Hook event JSON is available via stdin and used for mode selection.
 
@@ -56,7 +51,7 @@ fi
 # Claude Code passes event data as JSON on stdin.
 if read -r -t 0.1 _HOOK_EVENT 2>/dev/null; then :; fi
 HOOK_EVENT=$(printf '%s' "$_HOOK_EVENT" | grep -o '"hook_event_name"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
-TASK_DURATION=$(printf "%s" "$_HOOK_EVENT" | grep -o 'duration_seconds:[0-9]*' | cut -d: -f2)
+TASK_DURATION=$(printf '%s' "$_HOOK_EVENT" | grep -o '"duration_seconds"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*$')
 
 # ── 4. Script paths ───────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -71,6 +66,7 @@ CUSTOM_MESSAGES_FILE="$CHEERER_DATA_DIR/custom-messages.txt"
 CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
 CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
 CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
+CHEERER_DUMB="${CHEERER_DUMB:-auto}"
 CHEERER_MODE="${CHEERER_MODE:-auto}"
 CHEERER_CUSTOM_ONLY="${CHEERER_CUSTOM_ONLY:-false}"
 CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
@@ -89,14 +85,21 @@ case "$CHEERER_MODE" in
   *) CHEERER_MODE="auto" ;;
 esac
 
+case "$CHEERER_DUMB" in
+  auto|true|false) ;;
+  *) CHEERER_DUMB="auto" ;;
+esac
+
 # ── 6. Dumb terminal detection ────────────────────────────
-CHEERER_DUMB=false
-if [[ "${TERM:-}" == "dumb" ]] || [[ -z "${TERM:-}" ]]; then
-  CHEERER_DUMB=true
-else
-  COLOR_COUNT=$(tput colors 2>/dev/null || echo 0)
-  if [[ "$COLOR_COUNT" -lt 8 ]] 2>/dev/null; then
+if [[ "$CHEERER_DUMB" == "auto" ]]; then
+  CHEERER_DUMB=false
+  if [[ "${TERM:-}" == "dumb" ]] || [[ -z "${TERM:-}" ]]; then
     CHEERER_DUMB=true
+  else
+    COLOR_COUNT=$(tput colors 2>/dev/null || echo 0)
+    if [[ "$COLOR_COUNT" -lt 8 ]] 2>/dev/null; then
+      CHEERER_DUMB=true
+    fi
   fi
 fi
 export CHEERER_DUMB

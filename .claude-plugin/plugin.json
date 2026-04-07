@@ -13,15 +13,15 @@
   "hooks": "./hooks/hooks.json",
   "userConfig": {
     "lang": {
-      "description": "Voice language for encouragement messages (zh / en / ja)",
+      "description": "Voice language for encouragement messages (zh / en / ja, default: zh)",
       "sensitive": false
     },
     "anim": {
-      "description": "Animation style (random / basketball / dance / fireworks / epic)",
+      "description": "Animation style (random / basketball / dance / fireworks / epic, default: random)",
       "sensitive": false
     },
     "voice": {
-      "description": "Enable voice output (on / off)",
+      "description": "Enable voice output (on / off / true / false, default: on)",
       "sensitive": false
     }
   }

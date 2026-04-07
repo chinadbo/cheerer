@@ -4,19 +4,19 @@
 ![Shell](https://img.shields.io/badge/Shell-Bash-89e051?logo=gnu-bash&logoColor=white)
 ![GitHub Repo stars](https://img.shields.io/github/stars/chinadbo/cheerer?style=social)
 
-
 **言語：** [English](README.md) | [中文](README.zh.md) | 日本語
-
 
 Claude Code がタスクを完了すると、cheerer はターミナルでピクセルアニメーションと多言語の音声応援を再生し、コーディングをもっと楽しくします。
 
 ## ✨ 主な機能
 
-- 🏀 ANSI フレーム描画によるバスケットボール風ピクセルアニメーション
-- 💃 ダンスアニメーション
-- 🎆 花火アニメーション
+- 🏀 バスケットボール、ダンス、花火の3種類のターミナルアニメーション
 - 🔊 多言語の音声応援（中国語 / 英語 / 日本語）
-- 🎲 アニメーションと言語をランダムに選択し、毎回違う演出を提供
+- 🎲 アニメーションをランダム選択、または固定指定可能
+- 🚀 Epic モードでは3つのアニメーションを連続再生
+- 📊 トリガー統計とマイルストーン演出（`--stats`、花火演出）
+- 📝 `custom-messages.txt` からカスタム応援文を読み込み可能
+- 🖥️ dumb terminal の自動降格とセッション単位クールダウンに対応
 
 ## 🎬 デモについて
 
@@ -34,7 +34,7 @@ claude plugin install github:chinadbo/cheerer
 
 Claude Code セッション内から：
 
-```
+```text
 /plugin install github:chinadbo/cheerer
 ```
 
@@ -74,6 +74,7 @@ git clone https://github.com/chinadbo/cheerer.git ~/.cheerer
 chmod +x ~/.cheerer/scripts/cheer.sh
 chmod +x ~/.cheerer/scripts/animations/*.sh
 chmod +x ~/.cheerer/scripts/voices/*.sh
+chmod +x ~/.cheerer/bin/cheer
 ```
 
 `~/.claude/settings.json` に追加：
@@ -86,7 +87,21 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
         "hooks": [
           {
             "type": "command",
-            "command": "~/.cheerer/scripts/cheer.sh"
+            "command": "~/.cheerer/scripts/cheer.sh",
+            "async": true,
+            "statusMessage": "🎉 Cheering..."
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.cheerer/scripts/cheer.sh",
+            "async": true,
+            "statusMessage": "🎉 Cheering..."
           }
         ]
       }
@@ -97,18 +112,18 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 
 ## ⚙️ 設定
 
-### 方法1：インタラクティブ設定（Plugin インストール推奨）
+### 方法1：プラグイン設定
 
-プラグインを有効化する際、Claude Code が設定をガイドします：
+Claude Code が `/plugin enable cheerer` 中に設定入力を表示した場合、次の値を設定できます：
 
-```
+```text
 /plugin enable cheerer
 > 音声言語（zh / en / ja）: ja
-> アニメーション（random / basketball / dance / fireworks）: random
+> アニメーション（random / basketball / dance / fireworks / epic）: random
 > 音声出力（on / off）: on
 ```
 
-設定は自動保存され、セッションをまたいで有効です。
+入力プロンプトが表示されない場合は、同じ設定を環境変数で指定してください。
 
 ### 方法2：環境変数
 
@@ -116,13 +131,58 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 
 | 変数 | 説明 | 値 | デフォルト |
 |------|------|--------|---------|
-| `CHEERER_LANG` | 音声言語 | `zh` / `en` / `ja` | `zh` |
-| `CHEERER_ANIM` | アニメーション | `basketball` / `dance` / `fireworks` / `random` | `random` |
 | `CHEERER_ENABLED` | マスタースイッチ | `true` / `false` | `true` |
-| `CHEERER_VOICE` | 音声出力 | `on` / `off` | `on` |
-| `CHEERER_COOLDOWN` | トリガー間のクールダウン（秒）| 正の整数 | `3` |
+| `CHEERER_LANG` | 音声言語 | `zh` / `en` / `ja` | `zh` |
+| `CHEERER_ANIM` | アニメーション | `basketball` / `dance` / `fireworks` / `epic` / `random` | `random` |
+| `CHEERER_VOICE` | 音声出力 | `on` / `off` / `true` / `false` | `on` |
+| `CHEERER_DUMB` | テキストのみを強制するか自動判定を使う | `auto` / `true` / `false` | `auto` |
+| `CHEERER_MODE` | 出力モード | `auto` / `full` / `text` | `auto` |
+| `CHEERER_COOLDOWN` | トリガー間クールダウン（秒） | 正の整数 | `3` |
+| `CHEERER_EPIC_THRESHOLD` | この秒数以上で Epic モードを自動有効化 | 正の整数 | `60` |
+| `CHEERER_EPIC` | 単発で Epic モードを強制 | `true` / `false` | `false` |
+| `CHEERER_CUSTOM_ONLY` | カスタムメッセージのみを使う | `true` / `false` | `false` |
 
 > `CHEERER_*` 環境変数は plugin userConfig より優先されます。
+
+### 実行時の挙動
+
+- `CHEERER_MODE=auto` は `Stop` Hook ではテキストのみ、`TaskCompleted` Hook ではアニメーションを再生します。
+- `CHEERER_MODE=full` は常にアニメーションを再生します。
+- `CHEERER_MODE=text` は常にアニメーションをスキップします。
+- `CHEERER_ANIM=epic`、`CHEERER_EPIC=true`、またはタスク時間が `CHEERER_EPIC_THRESHOLD` 以上のとき、3つのアニメーションを連続再生します。
+- `CHEERER_COOLDOWN` は `0` を指定しても実効最小値は 1 秒です。
+- クールダウン中でもテキスト/音声出力は継続し、抑制されるのはアニメーションのみです。
+
+## 🚀 直接実行
+
+```bash
+# メインスクリプト
+bash scripts/cheer.sh
+CHEERER_LANG=en bash scripts/cheer.sh
+CHEERER_LANG=ja CHEERER_VOICE=off bash scripts/cheer.sh
+CHEERER_ANIM=fireworks bash scripts/cheer.sh
+CHEERER_ANIM=epic bash scripts/cheer.sh
+CHEERER_MODE=text bash scripts/cheer.sh
+CHEERER_DUMB=true bash scripts/cheer.sh
+
+# ラッパーコマンド
+bash bin/cheer --epic
+bash bin/cheer --stats
+```
+
+`bin/cheer` が現在サポートするフラグは2つだけです：
+
+- `--epic` — バスケットボール + ダンス + 花火を連続再生
+- `--stats` — 総トリガー数、到達済みマイルストーン、最後のトリガー時刻を表示
+
+## 📁 状態とデータファイル
+
+デフォルトでは cheerer は `${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}` にデータを保存します：
+
+- `stats.json` — 総トリガー数、最後のトリガー時刻、マイルストーン履歴
+- `custom-messages.txt` — 任意のカスタム応援文。1行に1件、`#` 行はコメント
+
+クールダウン状態は `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}` に保存されます。
 
 ## 🛠️ 技術メモ
 
@@ -139,10 +199,12 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 cheerer/
 ├── .claude-plugin/
 │   └── plugin.json          # プラグイン manifest
+├── bin/
+│   └── cheer                # ラッパーコマンド（--epic, --stats）
 ├── hooks/
 │   └── hooks.json           # Hook 設定
 ├── scripts/
-│   ├── cheer.sh             # メインエントリ（ランダムなアニメーション + 言語）
+│   ├── cheer.sh             # メインエントリ（Hook ルーティング + 統計）
 │   ├── animations/
 │   │   ├── basketball.sh    # バスケットボールアニメーション
 │   │   ├── dance.sh         # ダンスアニメーション
@@ -153,6 +215,7 @@ cheerer/
 │       └── cheer_ja.sh      # 日本語の応援
 ├── README.md
 ├── README.en.md
+├── README.zh.md
 └── README.ja.md
 ```
 
@@ -162,13 +225,13 @@ cheerer/
 
 1. `scripts/animations/` に新しい `.sh` ファイルを作成します
 2. `scripts/cheer.sh` の `ANIMS` 配列に名前を追加します
-3. `bash scripts/cheer.sh test` を実行して動作確認します
+3. `bash scripts/cheer.sh` または `CHEERER_ANIM=<name> bash scripts/cheer.sh` を実行して動作確認します
 
 ### 新しい言語を追加する
 
 1. `scripts/voices/` に `cheer_XX.sh` を作成します
 2. `scripts/cheer.sh` に対応する言語処理を追加します
-3. `bash scripts/cheer.sh test` を実行して出力を確認します
+3. `CHEERER_LANG=<code> bash scripts/cheer.sh` を実行して出力を確認します
 
 ## 📝 ライセンス
 
