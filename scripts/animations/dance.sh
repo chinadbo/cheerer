@@ -86,7 +86,7 @@ echo ""
 # 播放序列：1→2→3→2→3→4（6帧，总时长约 1.2s + 0.6s 停留 = 1.8s）
 for frame_fn in draw_frame1 draw_frame2 draw_frame3 draw_frame2 draw_frame3 draw_frame4; do
   printf "\033[${FRAME_LINES}A\033[0G"
-  eval "$frame_fn"
+  "$frame_fn"
   echo ""
   sleep "$DELAY"
 done

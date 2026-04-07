@@ -136,7 +136,7 @@ DELAY=0.18
 for frame_fn in draw_frame1 draw_frame2 draw_frame3 draw_frame4 draw_frame5 draw_frame6; do
   # 回到帧起始位置
   printf "\033[${FRAME_LINES}A\033[0G"
-  eval "$frame_fn"
+  "$frame_fn"
   echo ""
   sleep "$DELAY"
 done
