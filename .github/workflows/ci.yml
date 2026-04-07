@@ -25,10 +25,22 @@ jobs:
 
       - name: Run shellcheck
         run: |
-          shellcheck --severity=error scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh
+          shellcheck --severity=error \
+            scripts/cheer.sh \
+            scripts/animations/*.sh \
+            scripts/voices/*.sh \
+            bin/cheer \
+            scripts/check-secrets.sh \
+            scripts/install-hooks.sh
+
+      - name: Scan for secrets
+        run: bash scripts/check-secrets.sh
 
       - name: Run smoke test
-        run: bash scripts/cheer.sh test
+        run: |
+          CHEERER_ENABLED=false bash scripts/cheer.sh
+          CHEERER_LANG=en CHEERER_DUMB=true bash scripts/cheer.sh
+          CHEERER_LANG=ja CHEERER_DUMB=true bash scripts/cheer.sh
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

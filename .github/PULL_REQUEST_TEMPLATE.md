@@ -1,19 +1,30 @@
-## 改动描述
+## What does this PR do?
 
-请简要说明本次改动内容。
+<!-- Brief description of your change -->
 
-## 类型
+## Type
 
-- [ ] bugfix
-- [ ] feature
-- [ ] docs
+- [ ] bug fix
+- [ ] new animation
+- [ ] new language
+- [ ] documentation
+- [ ] infrastructure / CI
+- [ ] other: ___
 
-## 测试步骤
+## How to test
 
-请说明你如何验证本次修改。
+<!-- How did you verify your change works? -->
+
+```bash
+# Example commands you ran:
+bash scripts/cheer.sh
+CHEERER_LANG=en CHEERER_DUMB=true bash scripts/cheer.sh
+```
 
 ## Checklist
 
-- [ ] 已完成必要测试
-- [ ] 已更新相关文档
-- [ ] 不会破坏已有功能
+- [ ] `shellcheck --severity=error` passes on all shell files
+- [ ] Smoke test passes (see CONTRIBUTING.md)
+- [ ] No secrets, API keys, or env vars committed (`bash scripts/check-secrets.sh`)
+- [ ] READMEs updated if adding an animation or language
+- [ ] Commits are focused and have clear messages
