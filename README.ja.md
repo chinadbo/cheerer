@@ -95,15 +95,34 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 }
 ```
 
-## ⚙️ 環境変数
+## ⚙️ 設定
 
-| 変数 | 説明 | 値 |
-|------|------|--------|
-| `CHEERER_LANG` | 言語（CLI 引数より優先） | `zh` / `en` / `ja` |
-| `CHEERER_ANIM` | アニメーションを固定指定 | `basketball` / `dance` / `fireworks` |
-| `CHEERER_ENABLED` | 全体の有効 / 無効切り替え | `true` / `false` |
-| `CHEERER_VOICE` | 音声の有効 / 無効切り替え | `on` / `off` / `true` / `false` |
-| `CHEERER_COOLDOWN` | 再発火までのクールダウン秒数 | 正の整数 |
+### 方法1：インタラクティブ設定（Plugin インストール推奨）
+
+プラグインを有効化する際、Claude Code が設定をガイドします：
+
+```
+/plugin enable cheerer
+> 音声言語（zh / en / ja）: ja
+> アニメーション（random / basketball / dance / fireworks）: random
+> 音声出力（on / off）: on
+```
+
+設定は自動保存され、セッションをまたいで有効です。
+
+### 方法2：環境変数
+
+`~/.bashrc` / `~/.zshrc` または `.claude/settings.json` に設定：
+
+| 変数 | 説明 | 値 | デフォルト |
+|------|------|--------|---------|
+| `CHEERER_LANG` | 音声言語 | `zh` / `en` / `ja` | `zh` |
+| `CHEERER_ANIM` | アニメーション | `basketball` / `dance` / `fireworks` / `random` | `random` |
+| `CHEERER_ENABLED` | マスタースイッチ | `true` / `false` | `true` |
+| `CHEERER_VOICE` | 音声出力 | `on` / `off` | `on` |
+| `CHEERER_COOLDOWN` | トリガー間のクールダウン（秒）| 正の整数 | `3` |
+
+> `CHEERER_*` 環境変数は plugin userConfig より優先されます。
 
 ## 🛠️ 技術メモ
 

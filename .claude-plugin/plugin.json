@@ -2,11 +2,27 @@
   "name": "cheerer",
   "version": "1.0.0",
   "description": "Plays pixel animations and multilingual voice encouragement when Claude Code finishes a task.",
-  "author": "chinadbo",
+  "author": {
+    "name": "chinadbo",
+    "url": "https://github.com/chinadbo"
+  },
   "homepage": "https://github.com/chinadbo/cheerer",
   "repository": "https://github.com/chinadbo/cheerer",
   "license": "MIT",
   "keywords": ["encouragement", "animation", "hooks", "terminal", "fun"],
-  "category": "productivity",
-  "hooks": "./hooks/hooks.json"
+  "hooks": "./hooks/hooks.json",
+  "userConfig": {
+    "lang": {
+      "description": "Voice language for encouragement messages (zh / en / ja)",
+      "sensitive": false
+    },
+    "anim": {
+      "description": "Animation style (random / basketball / dance / fireworks)",
+      "sensitive": false
+    },
+    "voice": {
+      "description": "Enable voice output (on / off)",
+      "sensitive": false
+    }
+  }
 }

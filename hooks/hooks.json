@@ -5,18 +5,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh",
+            "async": true,
+            "statusMessage": "🎉 Cheering..."
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "TaskCompleted": [
       {
-        "matcher": "Task",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/cheer.sh",
+            "async": true,
+            "statusMessage": "🎉 Cheering..."
           }
         ]
       }

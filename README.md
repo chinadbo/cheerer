@@ -94,15 +94,34 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-## ⚙️ Environment Variables
+## ⚙️ Configuration
 
-| Variable | Description | Values |
-|------|------|--------|
-| `CHEERER_LANG` | Language (higher priority than CLI args) | `zh` / `en` / `ja` |
-| `CHEERER_ANIM` | Force a specific animation | `basketball` / `dance` / `fireworks` |
-| `CHEERER_ENABLED` | Master switch | `true` / `false` |
-| `CHEERER_VOICE` | Enable or disable voice | `on` / `off` / `true` / `false` |
-| `CHEERER_COOLDOWN` | Cooldown seconds between triggers | positive integer |
+### Option 1: Interactive setup (recommended for Plugin install)
+
+When you enable the plugin, Claude Code prompts you to configure:
+
+```
+/plugin enable cheerer
+> Voice language (zh / en / ja): zh
+> Animation style (random / basketball / dance / fireworks): random  
+> Enable voice output (on / off): on
+```
+
+Settings are saved automatically and persist across sessions.
+
+### Option 2: Environment variables
+
+Set in your shell profile (`~/.bashrc`, `~/.zshrc`) or `.claude/settings.json`:
+
+| Variable | Description | Values | Default |
+|------|------|--------|---------|
+| `CHEERER_LANG` | Voice language | `zh` / `en` / `ja` | `zh` |
+| `CHEERER_ANIM` | Animation style | `basketball` / `dance` / `fireworks` / `random` | `random` |
+| `CHEERER_ENABLED` | Master switch | `true` / `false` | `true` |
+| `CHEERER_VOICE` | Voice output | `on` / `off` | `on` |
+| `CHEERER_COOLDOWN` | Cooldown between triggers (seconds) | positive integer | `3` |
+
+> `CHEERER_*` env vars override plugin userConfig settings.
 
 ## 🛠️ Technical Notes
 

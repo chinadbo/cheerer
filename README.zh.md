@@ -95,15 +95,34 @@ chmod +x ~/.cheerer/scripts/voices/*.sh
 }
 ```
 
-## ⚙️ 环境变量
+## ⚙️ 配置
 
-| 变量 | 说明 | 可选值 |
-|------|------|--------|
-| `CHEERER_LANG` | 语言（优先级高于参数） | `zh` / `en` / `ja` |
-| `CHEERER_ANIM` | 指定动画（不设则随机） | `basketball` / `dance` / `fireworks` |
-| `CHEERER_ENABLED` | 总开关 | `true` / `false` |
-| `CHEERER_VOICE` | 是否启用语音 | `on` / `off` / `true` / `false` |
-| `CHEERER_COOLDOWN` | 两次触发之间的冷却秒数 | 正整数 |
+### 方式一：交互式配置（Plugin 安装推荐）
+
+启用插件时，Claude Code 会引导你完成配置：
+
+```
+/plugin enable cheerer
+> 语音语言（zh / en / ja）：zh
+> 动画类型（random / basketball / dance / fireworks）：random
+> 启用语音（on / off）：on
+```
+
+配置自动保存，跨会话持久有效。
+
+### 方式二：环境变量
+
+在 `~/.bashrc` / `~/.zshrc` 或 `.claude/settings.json` 中设置：
+
+| 变量 | 说明 | 可选值 | 默认值 |
+|------|------|--------|---------|
+| `CHEERER_LANG` | 语音语言 | `zh` / `en` / `ja` | `zh` |
+| `CHEERER_ANIM` | 动画类型 | `basketball` / `dance` / `fireworks` / `random` | `random` |
+| `CHEERER_ENABLED` | 主开关 | `true` / `false` | `true` |
+| `CHEERER_VOICE` | 语音开关 | `on` / `off` | `on` |
+| `CHEERER_COOLDOWN` | 两次触发的冷却时间（秒）| 正整数 | `3` |
+
+> `CHEERER_*` 环境变量优先级高于 plugin userConfig 配置。
 
 ## 🛠️ 技术实现
 
