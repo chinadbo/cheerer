@@ -1,0 +1,16 @@
+{
+  "name": "cheerer",
+  "version": "1.0.0",
+  "description": "Claude Code 鼓励师 — 任务完成时播放像素动画 + 语音鼓励",
+  "author": "guli-swe",
+  "license": "MIT",
+  "keywords": ["claude-code", "plugin", "animation", "tts", "encouragement"],
+  "scripts": {
+    "test": "bash scripts/cheer.sh",
+    "test:basketball": "CHEERER_ANIM=basketball bash scripts/cheer.sh",
+    "test:dance": "CHEERER_ANIM=dance bash scripts/cheer.sh",
+    "test:fireworks": "CHEERER_ANIM=fireworks bash scripts/cheer.sh",
+    "test:en": "bash scripts/cheer.sh en",
+    "install": "chmod +x scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh && echo '✅ 权限设置完成'"
+  }
+}

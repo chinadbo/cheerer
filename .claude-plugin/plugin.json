@@ -1,0 +1,8 @@
+{
+  "name": "cheerer",
+  "version": "1.0.0",
+  "description": "Claude Code 鼓励师 — 任务完成时播放像素动画 + 语音鼓励",
+  "author": "guli-swe",
+  "hooks": "./hooks/hooks.json",
+  "license": "MIT"
+}
