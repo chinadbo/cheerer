@@ -16,7 +16,7 @@ tput civis 2>/dev/null || true
 trap 'tput cnorm 2>/dev/null || true' EXIT
 
 DELAY=0.2
-FRAME_LINES=11
+FRAME_LINES=10
 
 # ── 帧1：初始姿势，双臂水平 ────────────────────────────
 draw_frame1() {
@@ -79,15 +79,12 @@ printf "%b" \
 }
 
 # ── 播放动画 ──────────────────────────────────────────
-echo ""
 draw_frame1
-echo ""
 
-# 播放序列：1→2→3→2→3→4（6帧，总时长约 1.2s + 0.6s 停留 = 1.8s）
-for frame_fn in draw_frame1 draw_frame2 draw_frame3 draw_frame2 draw_frame3 draw_frame4; do
+# 播放序列：2→3→2→3→4（5帧，总时长约 1.0s + 0.6s 停留 = 1.6s）
+for frame_fn in draw_frame2 draw_frame3 draw_frame2 draw_frame3 draw_frame4; do
   printf "\033[${FRAME_LINES}A\033[0G"
   "$frame_fn"
-  echo ""
   sleep "$DELAY"
 done
 

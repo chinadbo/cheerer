@@ -16,23 +16,7 @@ tput civis 2>/dev/null || true
 # 退出时恢复光标
 trap 'tput cnorm 2>/dev/null || true' EXIT
 
-# ── 清屏辅助函数 ─────────────────────────────────────
-FRAME_LINES=11
-
-clear_frame() {
-  for ((i=0; i<FRAME_LINES; i++)); do
-    echo -e "\033[2K"   # 清除当前行
-  done
-  # 回到帧起始行
-  echo -e "\033[${FRAME_LINES}A\033[0G"
-}
-
-print_frame() {
-  local frame="$1"
-  # 绘制时直接覆盖，不用先清除
-  echo -e "\033[${FRAME_LINES}A\033[0G" 2>/dev/null || true
-  printf "%b" "$frame"
-}
+FRAME_LINES=10
 
 # ── 帧定义（10行 × 24列）────────────────────────────
 # 篮框在右上角，球从左下弧线飞入
@@ -125,26 +109,23 @@ printf "%b" \
 }
 
 # ── 播放动画 ─────────────────────────────────────────
-echo ""  # 留一行空白
-# 先绘制第一帧（占位）
+# 先绘制第一帧
 draw_frame1
-echo ""
 
 DELAY=0.18
 
-# 帧循环
-for frame_fn in draw_frame1 draw_frame2 draw_frame3 draw_frame4 draw_frame5 draw_frame6; do
+# 帧循环（从第二帧开始，每帧先回退再绘制）
+for frame_fn in draw_frame2 draw_frame3 draw_frame4 draw_frame5 draw_frame6; do
   # 回到帧起始位置
   printf "\033[${FRAME_LINES}A\033[0G"
   "$frame_fn"
-  echo ""
   sleep "$DELAY"
 done
 
 # 最后停留 0.8 秒让用户看到进球效果
 sleep 0.8
 
-# 回到帧起始位置，清除动画区域
+# 清除动画区域，恢复原始位置
 printf "\033[${FRAME_LINES}A\033[0G"
 for ((i=0; i<FRAME_LINES; i++)); do
   printf "\033[2K\n"
