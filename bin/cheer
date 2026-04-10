@@ -1,20 +1,13 @@
 #!/bin/bash
-# cheer — standalone cheerer entry point
-# Can be invoked directly from Claude Code's Bash tool while the plugin is enabled:
-#   cheer         (random animation + default language)
-#   cheer --epic  (play all three animations in sequence)
-#   cheer --stats (print total triggers, milestones, and last trigger)
-# Use CHEERER_* env vars to control language, animation, and voice.
 SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
 if [[ "${1:-}" == "--epic" ]]; then
-  export CHEERER_EPIC=true
+  export CHEERER_ANIM=epic
   shift
 fi
 
 if [[ "${1:-}" == "--stats" ]]; then
   STATS_FILE="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}/stats.json"
-
   if [[ ! -f "$STATS_FILE" ]]; then
     echo "No stats yet — complete some tasks with Claude Code!"
     exit 0
@@ -25,19 +18,12 @@ if [[ "${1:-}" == "--stats" ]]; then
   LAST_TRIGGER=$(printf '%s' "$STATS_JSON" | grep -o '"last_trigger":"[^"]*"' | cut -d'"' -f4)
   MILESTONES_RAW=$(printf '%s' "$STATS_JSON" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)
 
-  [[ "$TOTAL_TRIGGERS" =~ ^[0-9]+$ ]] || TOTAL_TRIGGERS=0
-  [[ -n "$LAST_TRIGGER" ]] || LAST_TRIGGER=""
-  [[ -n "$MILESTONES_RAW" ]] || MILESTONES_RAW='[]'
+  [[ "$MILESTONES_RAW" == "[]" ]] && MILESTONES_RAW="none yet"
+  [[ "$MILESTONES_RAW" != "none yet" ]] && MILESTONES_RAW=$(printf '%s' "$MILESTONES_RAW" | tr -d '[]')
 
-  if [[ "$MILESTONES_RAW" == "[]" ]]; then
-    MILESTONES_DISPLAY="none yet"
-  else
-    MILESTONES_DISPLAY=$(printf '%s' "$MILESTONES_RAW" | tr -d '[]')
-  fi
-
-  echo "Total triggers: $TOTAL_TRIGGERS"
-  echo "Milestones reached: $MILESTONES_DISPLAY"
-  echo "Last trigger: $LAST_TRIGGER"
+  echo "Total triggers: ${TOTAL_TRIGGERS:-0}"
+  echo "Milestones reached: $MILESTONES_RAW"
+  echo "Last trigger: ${LAST_TRIGGER:-}"
   exit 0
 fi
 

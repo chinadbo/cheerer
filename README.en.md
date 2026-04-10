@@ -140,17 +140,33 @@ bash scripts/voices/cheer_ja.sh
 | `CHEERER_EPIC_THRESHOLD` | Auto-enable epic mode at this task duration | positive integer | `60` |
 | `CHEERER_EPIC` | Force epic mode for one run | `true` / `false` | `false` |
 | `CHEERER_CUSTOM_ONLY` | Use only custom messages when available | `true` / `false` | `false` |
+| `CHEERER_STYLE` | Celebration personality | `adaptive` / `balanced` / `hype` / `cozy` | `adaptive` |
+| `CHEERER_INTENSITY` | Celebration energy | `soft` / `normal` / `high` | `normal` |
 
 `CHEERER_*` env vars override plugin settings.
 
 ### Runtime behavior
 
-- `CHEERER_MODE=auto` keeps `Stop` hooks text-only and animates `TaskCompleted` hooks.
+- `CHEERER_MODE=auto` animates `TaskCompleted` hooks and keeps `Stop` hooks text-only unless `CHEERER_INTENSITY=high`.
 - `CHEERER_MODE=full` always plays animation.
 - `CHEERER_MODE=text` always skips animation.
 - `CHEERER_ANIM=epic`, `CHEERER_EPIC=true`, or a task duration at or above `CHEERER_EPIC_THRESHOLD` plays all three animations in sequence.
 - `CHEERER_COOLDOWN` has an effective minimum of 1 second even if set to `0`.
 - Cooldown suppresses animation only; text/voice output still runs.
+- `CHEERER_DUMB=auto` is the default; cheerer also auto-detects dumb terminals and empty `TERM` values.
+- `CHEERER_STYLE=adaptive` uses hook type, duration, milestones, and recent history to vary cheer tone.
+- `CHEERER_INTENSITY=soft` keeps quick wins lighter; `high` makes celebration output more energetic, including animated `Stop` hooks in `CHEERER_MODE=auto`.
+- Messages are selected from per-language catalogs and avoid immediate repeats when possible.
+
+## Testing
+
+```bash
+bash tests/run.sh all
+bash tests/run.sh state
+bash tests/run.sh policy
+bash tests/run.sh render
+bash tests/run.sh integration
+```
 
 ## 📁 State and data files
 
@@ -160,6 +176,8 @@ By default, cheerer stores plugin data in `${CLAUDE_PLUGIN_DATA:-$HOME/.config/c
 - `custom-messages.txt` — optional custom encouragements, one message per line (`#` starts a comment)
 
 Cooldown state is tracked in `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}`.
+
+Milestones currently trigger at 10, 25, 50, 100, 250, 500, and 1000 total runs. Milestone runs append a trophy message and force the fireworks animation.
 
 ## 🛠️ Technical Notes
 
@@ -201,7 +219,7 @@ cheerer/
 ### Add a new animation
 
 1. Create a new `.sh` file in `scripts/animations/`
-2. Add the animation name to the `ANIMS` array in `scripts/cheer.sh`
+2. Add the animation name to the candidate list in `policy_pick_animation` in `scripts/lib/policy.sh`
 3. Run `bash scripts/cheer.sh` or `CHEERER_ANIM=<name> bash scripts/cheer.sh` to verify it works
 
 ### Add a new language

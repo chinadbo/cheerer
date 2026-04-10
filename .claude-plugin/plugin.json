@@ -1,7 +1,7 @@
 {
   "name": "cheerer",
   "version": "1.0.0",
-  "description": "Plays pixel animations and multilingual voice encouragement when Claude Code finishes a task.",
+  "description": "Plays context-aware encouragement, pixel animations, and multilingual voice feedback when Claude Code finishes a task.",
   "author": {
     "name": "chinadbo",
     "url": "https://github.com/chinadbo"
@@ -27,6 +27,18 @@
       "type": "string",
       "title": "Voice output",
       "description": "Enable voice output (on / off / true / false, default: on)",
+      "sensitive": false
+    },
+    "style": {
+      "type": "string",
+      "title": "Celebration style",
+      "description": "Celebration style (adaptive / balanced / hype / cozy, default: adaptive)",
+      "sensitive": false
+    },
+    "intensity": {
+      "type": "string",
+      "title": "Celebration intensity",
+      "description": "Celebration intensity (soft / normal / high, default: normal)",
       "sensitive": false
     }
   }

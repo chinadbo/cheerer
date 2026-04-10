@@ -29,11 +29,11 @@
     "encouragement"
   ],
   "scripts": {
-    "test": "bash scripts/cheer.sh",
-    "test:basketball": "CHEERER_ANIM=basketball bash scripts/cheer.sh",
-    "test:dance": "CHEERER_ANIM=dance bash scripts/cheer.sh",
-    "test:fireworks": "CHEERER_ANIM=fireworks bash scripts/cheer.sh",
-    "test:en": "CHEERER_LANG=en bash scripts/cheer.sh",
-    "install": "chmod +x bin/cheer scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh && echo '✅ 权限设置完成'"
+    "test": "bash tests/run.sh all",
+    "test:state": "bash tests/run.sh state",
+    "test:policy": "bash tests/run.sh policy",
+    "test:render": "bash tests/run.sh render",
+    "test:integration": "bash tests/run.sh integration",
+    "install": "chmod +x bin/cheer scripts/cheer.sh scripts/animations/*.sh scripts/voices/*.sh tests/run.sh && echo '✅ permissions set'"
   }
 }

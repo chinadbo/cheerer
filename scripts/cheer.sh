@@ -1,226 +1,96 @@
 #!/bin/bash
-# cheer.sh — cheerer main entry script
-# Triggered by Claude Code hooks on Stop / TaskCompleted events.
-# Plays a random pixel animation and multilingual voice encouragement.
-#
-# Configuration summary
-#   CHEERER_ENABLED        true|false                 default: true
-#   CHEERER_LANG           zh|en|ja                   default: zh
-#   CHEERER_ANIM           basketball|dance|fireworks|epic|random
-#   CHEERER_VOICE          on|off|true|false         default: on
-#   CHEERER_DUMB           auto|true|false           default: auto
-#   CHEERER_MODE           auto|full|text            default: auto
-#   CHEERER_COOLDOWN       positive integer          default: 3
-#   CHEERER_EPIC_THRESHOLD positive integer          default: 60
-#   CHEERER_CUSTOM_ONLY    true|false                default: false
-#
-# Plugin userConfig values map to:
-#   CLAUDE_PLUGIN_OPTION_LANG  -> CHEERER_LANG
-#   CLAUDE_PLUGIN_OPTION_ANIM  -> CHEERER_ANIM
-#   CLAUDE_PLUGIN_OPTION_VOICE -> CHEERER_VOICE
-#
-# Runtime notes
-#   - Cooldown file: /tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}
-#   - Data dir: ${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}
-#   - CHEERER_MODE=auto keeps Stop hooks text-only and animates TaskCompleted
-#   - CHEERER_ANIM=epic or CHEERER_EPIC=true runs all three animations
-#   - There is no `bash scripts/cheer.sh test` mode
-#   - bin/cheer supports: --epic, --stats
-#
-# Hook event JSON is available via stdin and used for mode selection.
-
-# Always exit 0 — never let cheerer errors affect Claude Code
 set +e
 
-# ── 1. Master switch ──────────────────────────────────────
 CHEERER_ENABLED="${CHEERER_ENABLED:-true}"
 if [[ "$CHEERER_ENABLED" == "false" ]]; then
   exit 0
 fi
 
-# ── 2. Redirect stdout → terminal ────────────────────────
-# Claude Code suppresses hook stdout. Force output to terminal.
 if [[ ! -t 1 ]]; then
-  _TTY=$(tty 2>/dev/null) || _TTY=/dev/tty
-  if [[ -w "$_TTY" ]]; then
+  _TTY=$(tty 2>/dev/null)
+  if [[ $? -eq 0 ]] && [[ -n "$_TTY" ]] && [[ -w "$_TTY" ]]; then
     exec 1>"$_TTY"
   fi
 fi
 
-# ── 3. Drain stdin (hook event JSON) ─────────────────────
-# Claude Code passes event data as JSON on stdin.
-if read -r -t 0.1 _HOOK_EVENT 2>/dev/null; then :; fi
+if read -r -t 1 _HOOK_EVENT 2>/dev/null; then :; fi
 HOOK_EVENT=$(printf '%s' "$_HOOK_EVENT" | grep -o '"hook_event_name"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
 TASK_DURATION=$(printf '%s' "$_HOOK_EVENT" | grep -o '"duration_seconds"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*$')
 
-# ── 4. Script paths ───────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CHEERER_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ANIM_DIR="$SCRIPT_DIR/animations"
 VOICE_DIR="$SCRIPT_DIR/voices"
 CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
 STATS_FILE="$CHEERER_DATA_DIR/stats.json"
-CUSTOM_MESSAGES_FILE="$CHEERER_DATA_DIR/custom-messages.txt"
+HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
 
-# ── 5. Resolve configuration ─────────────────────────────
-# Priority: explicit CHEERER_* env > CLAUDE_PLUGIN_OPTION_* (userConfig) > defaults
 CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
 CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
 CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
+CHEERER_STYLE="${CHEERER_STYLE:-${CLAUDE_PLUGIN_OPTION_STYLE:-adaptive}}"
+CHEERER_INTENSITY="${CHEERER_INTENSITY:-${CLAUDE_PLUGIN_OPTION_INTENSITY:-normal}}"
 CHEERER_DUMB="${CHEERER_DUMB:-auto}"
 CHEERER_MODE="${CHEERER_MODE:-auto}"
-CHEERER_CUSTOM_ONLY="${CHEERER_CUSTOM_ONLY:-false}"
 CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
 CHEERER_EPIC_THRESHOLD="${CHEERER_EPIC_THRESHOLD:-60}"
-# minimum 1s prevents dual-trigger from Stop+TaskCompleted firing simultaneously
-EFFECTIVE_COOLDOWN=$(( CHEERER_COOLDOWN > 1 ? CHEERER_COOLDOWN : 1 ))
+CHEERER_EPIC="${CHEERER_EPIC:-false}"
 
-# Validate language
-case "$CHEERER_LANG" in
-  zh|en|ja) ;;
-  *) CHEERER_LANG="zh" ;;
-esac
+case "$CHEERER_LANG" in zh|en|ja) ;; *) CHEERER_LANG="zh" ;; esac
+case "$CHEERER_STYLE" in adaptive|balanced|hype|cozy) ;; *) CHEERER_STYLE="adaptive" ;; esac
+case "$CHEERER_INTENSITY" in soft|normal|high) ;; *) CHEERER_INTENSITY="normal" ;; esac
+case "$CHEERER_MODE" in auto|full|text) ;; *) CHEERER_MODE="auto" ;; esac
+case "$CHEERER_DUMB" in auto|true|false) ;; *) CHEERER_DUMB="auto" ;; esac
 
-case "$CHEERER_MODE" in
-  auto|full|text) ;;
-  *) CHEERER_MODE="auto" ;;
-esac
-
-case "$CHEERER_DUMB" in
-  auto|true|false) ;;
-  *) CHEERER_DUMB="auto" ;;
-esac
-
-# ── 6. Dumb terminal detection ────────────────────────────
 if [[ "$CHEERER_DUMB" == "auto" ]]; then
   CHEERER_DUMB=false
   if [[ "${TERM:-}" == "dumb" ]] || [[ -z "${TERM:-}" ]]; then
     CHEERER_DUMB=true
-  else
-    COLOR_COUNT=$(tput colors 2>/dev/null || echo 0)
-    if [[ "$COLOR_COUNT" -lt 8 ]] 2>/dev/null; then
-      CHEERER_DUMB=true
-    fi
   fi
 fi
-export CHEERER_DUMB
 
-# ── 7. Cooldown check ─────────────────────────────────────
+. "$SCRIPT_DIR/lib/state.sh"
+. "$SCRIPT_DIR/lib/policy.sh"
+. "$SCRIPT_DIR/lib/render.sh"
+
+state_init
+CURRENT_TS=$(date +%s 2>/dev/null || echo 0)
+CURRENT_ISO=$(date -Iseconds 2>/dev/null || date)
+RECENT_TASKCOMPLETED_COUNT=$(state_recent_count $((CURRENT_TS - 300)) "TaskCompleted")
+SESSION_STREAK=$(state_recent_count $((CURRENT_TS - 1800)) "TaskCompleted")
+RECENT_ANIMATIONS="$(state_recent_values_csv 6 3)"
+RECENT_MESSAGE_IDS="$(state_recent_values_csv 7 3)"
+IN_COOLDOWN="false"
+
 COOLDOWN_FILE="/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}"
-IN_COOLDOWN=false
-CURRENT_TIME=$(date +%s 2>/dev/null || echo 0)
-
+_EFFECTIVE_COOLDOWN="${CHEERER_COOLDOWN:-3}"
+if [[ "$_EFFECTIVE_COOLDOWN" =~ ^[0-9]+$ ]] && [[ "$_EFFECTIVE_COOLDOWN" -lt 1 ]]; then
+  _EFFECTIVE_COOLDOWN=1
+fi
 if [[ -f "$COOLDOWN_FILE" ]]; then
   LAST_RUN=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo 0)
-  if [[ -n "$LAST_RUN" ]] && [[ "$LAST_RUN" =~ ^[0-9]+$ ]]; then
-    DIFF=$(( CURRENT_TIME - LAST_RUN ))
-    if [[ "$DIFF" -lt "$EFFECTIVE_COOLDOWN" ]] 2>/dev/null; then
-      IN_COOLDOWN=true
-    fi
+  if [[ "$LAST_RUN" =~ ^[0-9]+$ ]] && [[ $((CURRENT_TS - LAST_RUN)) -lt $_EFFECTIVE_COOLDOWN ]]; then
+    IN_COOLDOWN="true"
   fi
 fi
-echo "$CURRENT_TIME" > "$COOLDOWN_FILE" 2>/dev/null || true
+echo "$CURRENT_TS" > "$COOLDOWN_FILE" 2>/dev/null || true
 
-MILESTONE_MSG=""
-{
-  mkdir -p "$CHEERER_DATA_DIR"
-  if [[ ! -f "$STATS_FILE" ]]; then
-    printf '{"total_triggers":0,"last_trigger":"","milestones":[]}\n' > "$STATS_FILE"
-  fi
-
-  STATS_JSON=$(cat "$STATS_FILE" 2>/dev/null)
-  TOTAL_TRIGGERS=$(printf '%s' "$STATS_JSON" | grep -o '"total_triggers":[0-9]*' | cut -d: -f2)
-  [[ "$TOTAL_TRIGGERS" =~ ^[0-9]+$ ]] || TOTAL_TRIGGERS=0
-  TOTAL_TRIGGERS=$((TOTAL_TRIGGERS + 1))
-
-  LAST_TRIGGER=$(date -Iseconds 2>/dev/null || date)
-  MILESTONES_JSON=$(printf '%s' "$STATS_JSON" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)
-  [[ -n "$MILESTONES_JSON" ]] || MILESTONES_JSON='[]'
-
-  for milestone in 10 25 50 100 250 500 1000; do
-    if [[ "$TOTAL_TRIGGERS" -eq "$milestone" ]]; then
-      MILESTONE_MSG="🏆 Trigger #$TOTAL_TRIGGERS!"
-      if [[ "$MILESTONES_JSON" == "[]" ]]; then
-        MILESTONES_JSON="[$TOTAL_TRIGGERS]"
-      else
-        MILESTONES_JSON="${MILESTONES_JSON%]},$TOTAL_TRIGGERS]"
-      fi
-      break
-    fi
-  done
-
-  printf '{"total_triggers":%s,"last_trigger":"%s","milestones":%s}\n' \
-    "$TOTAL_TRIGGERS" "$LAST_TRIGGER" "$MILESTONES_JSON" > "$STATS_FILE"
-} 2>/dev/null || true
-
-CUSTOM_MSGS=()
-if [[ -f "$CUSTOM_MESSAGES_FILE" ]]; then
-  while IFS= read -r custom_msg; do
-    [[ -z "$custom_msg" ]] && continue
-    [[ "$custom_msg" == \#* ]] && continue
-    CUSTOM_MSGS+=("$custom_msg")
-  done < "$CUSTOM_MESSAGES_FILE"
+if [[ ! "${CHEERER_EPIC_THRESHOLD:-}" =~ ^[0-9]+$ ]]; then
+  CHEERER_EPIC_THRESHOLD=60
 fi
 
-CHEERER_CUSTOM_MSG=""
-if (( ${#CUSTOM_MSGS[@]} > 0 )); then
-  if [[ "$CHEERER_CUSTOM_ONLY" == "true" ]] || [[ $((RANDOM % 2)) -eq 0 ]]; then
-    CHEERER_CUSTOM_MSG="${CUSTOM_MSGS[$((RANDOM % ${#CUSTOM_MSGS[@]}))]}"
-  fi
+if [[ "$CHEERER_EPIC" == "true" ]] || { [[ "${TASK_DURATION:-0}" =~ ^[0-9]+$ ]] && [[ "${TASK_DURATION:-0}" -ge "$CHEERER_EPIC_THRESHOLD" ]]; }; then
+  CHEERER_ANIM="epic"
 fi
 
-# ── 8. Select animation ───────────────────────────────────
-ANIMS=(basketball dance fireworks)
-RUN_EPIC=false
-if [[ "$CHEERER_EPIC" == "true" ]] || [[ "$CHEERER_ANIM" == "epic" ]]; then
-  RUN_EPIC=true
-elif [[ "$TASK_DURATION" =~ ^[0-9]+$ ]] && [[ "$TASK_DURATION" -ge "$CHEERER_EPIC_THRESHOLD" ]]; then
-  RUN_EPIC=true
+state_record_trigger "$CURRENT_ISO"
+policy_select_celebration
+if [[ "$CHEERER_ANIM" != "random" ]] && [[ "$CHEERER_ANIM" != "epic" ]]; then
+  POLICY_ANIMATION="$CHEERER_ANIM"
 fi
-
-if [[ -n "$MILESTONE_MSG" ]]; then
-  ANIM="fireworks"
-elif [[ "$CHEERER_ANIM" == "random" ]] || [[ -z "$CHEERER_ANIM" ]]; then
-  ANIM="${ANIMS[$((RANDOM % ${#ANIMS[@]}))]}"
-else
-  ANIM="$CHEERER_ANIM"
-fi
-ANIM_SCRIPT="$ANIM_DIR/$ANIM.sh"
-PLAY_ANIMATION=true
-if [[ "$CHEERER_MODE" == "text" ]]; then
-  PLAY_ANIMATION=false
-elif [[ "$HOOK_EVENT" == "Stop" ]] && [[ "$CHEERER_MODE" != "full" ]]; then
-  PLAY_ANIMATION=false
-fi
-
-# ── 9. Play animation ─────────────────────────────────────
-if [[ "$PLAY_ANIMATION" == "true" ]] && [[ "$IN_COOLDOWN" == "false" ]] && [[ "$CHEERER_DUMB" == "false" ]]; then
-  if [[ "$RUN_EPIC" == "true" ]]; then
-    for epic_anim in basketball dance fireworks; do
-      if [[ -f "$ANIM_DIR/$epic_anim.sh" ]]; then
-        bash "$ANIM_DIR/$epic_anim.sh"
-      fi
-    done
-  elif [[ -f "$ANIM_SCRIPT" ]]; then
-    bash "$ANIM_SCRIPT"
-  fi
-fi
-
-# ── 10. Voice / text encouragement ────────────────────────
-VOICE_SCRIPT="$VOICE_DIR/cheer_${CHEERER_LANG}.sh"
-FALLBACK_MSG="Great work! Task complete!"
-if [[ -n "$MILESTONE_MSG" ]]; then
-  FALLBACK_MSG="$FALLBACK_MSG $MILESTONE_MSG"
-fi
-
-if [[ -f "$VOICE_SCRIPT" ]]; then
-  CHEERER_VOICE="$CHEERER_VOICE" CHEERER_DUMB="$CHEERER_DUMB" CHEERER_MILESTONE_MSG="$MILESTONE_MSG" CHEERER_CUSTOM_MSG="$CHEERER_CUSTOM_MSG" bash "$VOICE_SCRIPT"
-else
-  # Fallback
-  if [[ "$CHEERER_DUMB" == "true" ]]; then
-    echo "$FALLBACK_MSG"
-  else
-    echo -e "\033[1;32m🎉 $FALLBACK_MSG\033[0m"
-  fi
-fi
+render_select_message
+render_should_animate
+render_emit
+state_append_history "$CURRENT_TS" "$HOOK_EVENT" "${TASK_DURATION:-0}" "$POLICY_TIER" "$POLICY_MOOD" "$POLICY_ANIMATION" "$RENDER_MESSAGE_ID"
 
 exit 0

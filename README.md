@@ -123,6 +123,8 @@ If Claude Code prompts for plugin settings during `/plugin enable cheerer`, you 
 > Voice language (zh / en / ja): zh
 > Animation style (random / basketball / dance / fireworks / epic): random
 > Enable voice output (on / off): on
+> Celebration style (adaptive / balanced / hype / cozy): adaptive
+> Celebration intensity (soft / normal / high): normal
 ```
 
 If no prompt appears, set the same values with environment variables instead.
@@ -143,17 +145,23 @@ Set in your shell profile (`~/.bashrc`, `~/.zshrc`) or `.claude/settings.json`:
 | `CHEERER_EPIC_THRESHOLD` | Auto-enable epic mode when task duration reaches this many seconds | positive integer | `60` |
 | `CHEERER_EPIC` | Force epic mode for one run | `true` / `false` | `false` |
 | `CHEERER_CUSTOM_ONLY` | Use only custom messages when available | `true` / `false` | `false` |
+| `CHEERER_STYLE` | Celebration personality | `adaptive` / `balanced` / `hype` / `cozy` | `adaptive` |
+| `CHEERER_INTENSITY` | Celebration energy | `soft` / `normal` / `high` | `normal` |
 
 > `CHEERER_*` env vars override plugin `userConfig` settings.
 
 ### Runtime behavior
 
-- `CHEERER_MODE=auto` plays animation on `TaskCompleted`, but keeps `Stop` hooks text-only.
+- `CHEERER_MODE=auto` plays animation on `TaskCompleted`, and keeps `Stop` hooks text-only unless `CHEERER_INTENSITY=high`.
 - `CHEERER_MODE=full` always plays animation.
 - `CHEERER_MODE=text` always skips animation and prints only the encouragement text/voice.
 - `CHEERER_ANIM=epic`, `CHEERER_EPIC=true`, or a task duration at or above `CHEERER_EPIC_THRESHOLD` plays all three animations in sequence.
 - `CHEERER_COOLDOWN` has an effective minimum of 1 second, even if you set `0`.
-- `CHEERER_DUMB=auto` is the default; cheerer also auto-detects dumb terminals and low-color terminals.
+- Cooldown suppresses animation only; text/voice output still runs.
+- `CHEERER_DUMB=auto` is the default; cheerer also auto-detects dumb terminals and empty `TERM` values.
+- `CHEERER_STYLE=adaptive` uses hook type, duration, milestones, and recent history to vary cheer tone.
+- `CHEERER_INTENSITY=soft` keeps quick wins lighter; `high` makes celebration output more energetic, including animated `Stop` hooks in `CHEERER_MODE=auto`.
+- Messages are selected from per-language catalogs and avoid immediate repeats when possible.
 
 ## 🚀 Direct usage
 
@@ -179,11 +187,22 @@ bash bin/cheer --stats
 - `--epic` — force epic mode (basketball + dance + fireworks)
 - `--stats` — print total triggers, milestones reached, and last trigger time
 
+## Testing
+
+```bash
+bash tests/run.sh all
+bash tests/run.sh state
+bash tests/run.sh policy
+bash tests/run.sh render
+bash tests/run.sh integration
+```
+
 ## 📁 State and data files
 
 By default, cheerer stores plugin data in `${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}`:
 
 - `stats.json` — total triggers, last trigger time, milestone history
+- `history.log` — per-trigger log (timestamp, event, duration, tier, mood, animation, message id); trimmed to the last 50 rows
 - `custom-messages.txt` — optional custom encouragements, one message per line (`#` starts a comment)
 
 Cooldown state is tracked separately in `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}`.
@@ -215,10 +234,25 @@ cheerer/
 │   │   ├── basketball.sh    # Basketball animation
 │   │   ├── dance.sh         # Dancing animation
 │   │   └── fireworks.sh     # Fireworks animation
+│   ├── lib/
+│   │   ├── policy.sh        # Tier/mood selection logic
+│   │   ├── render.sh        # Message selection and output
+│   │   └── state.sh         # Stats, history, milestones
+│   ├── messages/
+│   │   ├── catalog_en.tsv   # English message catalog
+│   │   ├── catalog_zh.tsv   # Chinese message catalog
+│   │   └── catalog_ja.tsv   # Japanese message catalog
 │   └── voices/
 │       ├── cheer_zh.sh      # Chinese encouragement
 │       ├── cheer_en.sh      # English encouragement
 │       └── cheer_ja.sh      # Japanese encouragement
+├── tests/
+│   ├── run.sh               # Test runner
+│   ├── fixtures/            # JSON hook event fixtures
+│   ├── integration_test.sh
+│   ├── policy_test.sh
+│   ├── render_test.sh
+│   └── state_test.sh
 ├── README.md
 ├── README.en.md
 ├── README.zh.md
@@ -230,7 +264,7 @@ cheerer/
 ### Add a new animation
 
 1. Create a new `.sh` file in `scripts/animations/`
-2. Add the animation name to the `ANIMS` array in `scripts/cheer.sh`
+2. Add the animation name to the candidate list in `policy_pick_animation` in `scripts/lib/policy.sh`
 3. Run `bash scripts/cheer.sh` or `CHEERER_ANIM=<name> bash scripts/cheer.sh` to verify it works
 
 ### Add a new language

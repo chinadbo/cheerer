@@ -123,6 +123,8 @@ Claude Code が `/plugin enable cheerer` 中に設定入力を表示した場合
 > 音声言語（zh / en / ja）: ja
 > アニメーション（random / basketball / dance / fireworks / epic）: random
 > 音声出力（on / off）: on
+> 応援スタイル（adaptive / balanced / hype / cozy）: adaptive
+> 応援の強さ（soft / normal / high）: normal
 ```
 
 入力プロンプトが表示されない場合は、同じ設定を環境変数で指定してください。
@@ -143,17 +145,23 @@ Claude Code が `/plugin enable cheerer` 中に設定入力を表示した場合
 | `CHEERER_EPIC_THRESHOLD` | この秒数以上で Epic モードを自動有効化 | 正の整数 | `60` |
 | `CHEERER_EPIC` | 単発で Epic モードを強制 | `true` / `false` | `false` |
 | `CHEERER_CUSTOM_ONLY` | カスタムメッセージのみを使う | `true` / `false` | `false` |
+| `CHEERER_STYLE` | 応援スタイル | `adaptive` / `balanced` / `hype` / `cozy` | `adaptive` |
+| `CHEERER_INTENSITY` | 応援の強さ | `soft` / `normal` / `high` | `normal` |
 
 > `CHEERER_*` 環境変数は plugin userConfig より優先されます。
 
 ### 実行時の挙動
 
-- `CHEERER_MODE=auto` は `Stop` Hook ではテキストのみ、`TaskCompleted` Hook ではアニメーションを再生します。
+- `CHEERER_MODE=auto` は `Stop` Hook ではテキストのみ、`TaskCompleted` Hook ではアニメーションを再生します。ただし `CHEERER_INTENSITY=high` のときは `Stop` Hook でもアニメーションします。
 - `CHEERER_MODE=full` は常にアニメーションを再生します。
 - `CHEERER_MODE=text` は常にアニメーションをスキップします。
 - `CHEERER_ANIM=epic`、`CHEERER_EPIC=true`、またはタスク時間が `CHEERER_EPIC_THRESHOLD` 以上のとき、3つのアニメーションを連続再生します。
 - `CHEERER_COOLDOWN` は `0` を指定しても実効最小値は 1 秒です。
 - クールダウン中でもテキスト/音声出力は継続し、抑制されるのはアニメーションのみです。
+- `CHEERER_DUMB=auto` はデフォルト動作です。cheerer は dumb terminal や空の `TERM` も自動検知して降格します。
+- `CHEERER_STYLE=adaptive` は Hook 種別、タスク時間、マイルストーン、直近履歴を使って応援トーンを切り替えます。
+- `CHEERER_INTENSITY=soft` は軽い完了を控えめにし、`high` は祝福をより勢いよくします。`CHEERER_MODE=auto` では `Stop` Hook のアニメーションも有効になります。
+- メッセージは言語ごとのカタログから選び、直近の重複をできるだけ避けます。
 
 ## 🚀 直接実行
 
@@ -177,6 +185,16 @@ bash bin/cheer --stats
 - `--epic` — バスケットボール + ダンス + 花火を連続再生
 - `--stats` — 総トリガー数、到達済みマイルストーン、最後のトリガー時刻を表示
 
+## テスト
+
+```bash
+bash tests/run.sh all
+bash tests/run.sh state
+bash tests/run.sh policy
+bash tests/run.sh render
+bash tests/run.sh integration
+```
+
 ## 📁 状態とデータファイル
 
 デフォルトでは cheerer は `${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}` にデータを保存します：
@@ -185,6 +203,8 @@ bash bin/cheer --stats
 - `custom-messages.txt` — 任意のカスタム応援文。1行に1件、`#` 行はコメント
 
 クールダウン状態は `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}` に保存されます。
+
+現在のマイルストーン閾値は 10、25、50、100、250、500、1000 回です。マイルストーン到達時はトロフィーメッセージが追加され、花火アニメーションが強制されます。
 
 ## 🛠️ 技術メモ
 
@@ -226,7 +246,7 @@ cheerer/
 ### 新しいアニメーションを追加する
 
 1. `scripts/animations/` に新しい `.sh` ファイルを作成します
-2. `scripts/cheer.sh` の `ANIMS` 配列に名前を追加します
+2. `scripts/lib/policy.sh` の `policy_pick_animation` の候補リストに名前を追加します
 3. `bash scripts/cheer.sh` または `CHEERER_ANIM=<name> bash scripts/cheer.sh` を実行して動作確認します
 
 ### 新しい言語を追加する

@@ -26,13 +26,12 @@ MESSAGES=(
   "Zero warnings, zero errors. Your compiler is proud of you."
 )
 
-if [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
+if [[ -n "${CHEERER_MESSAGE:-}" ]]; then
+  MSG="$CHEERER_MESSAGE"
+elif [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
   MSG="$CHEERER_CUSTOM_MSG"
 else
   MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
-fi
-if [[ -n "${CHEERER_MILESTONE_MSG:-}" ]]; then
-  MSG="$MSG ${CHEERER_MILESTONE_MSG}"
 fi
 
 # Output text cheer (no ANSI in dumb terminal mode)

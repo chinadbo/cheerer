@@ -26,13 +26,12 @@ MESSAGES=(
   "又一个 TODO 变成了 DONE，待办列表在颤抖！"
 )
 
-if [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
+if [[ -n "${CHEERER_MESSAGE:-}" ]]; then
+  MSG="$CHEERER_MESSAGE"
+elif [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
   MSG="$CHEERER_CUSTOM_MSG"
 else
   MSG="${MESSAGES[$((RANDOM % ${#MESSAGES[@]}))]}"
-fi
-if [[ -n "${CHEERER_MILESTONE_MSG:-}" ]]; then
-  MSG="$MSG ${CHEERER_MILESTONE_MSG}"
 fi
 
 # 输出文字鼓励（dumb terminal 模式不加颜色）

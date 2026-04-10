@@ -123,6 +123,8 @@ chmod +x ~/.cheerer/bin/cheer
 > 语音语言（zh / en / ja）：zh
 > 动画类型（random / basketball / dance / fireworks / epic）：random
 > 启用语音（on / off）：on
+> 鼓励风格（adaptive / balanced / hype / cozy）：adaptive
+> 鼓励强度（soft / normal / high）：normal
 ```
 
 如果没有出现交互提示，也可以直接通过环境变量完成同样的配置。
@@ -143,17 +145,23 @@ chmod +x ~/.cheerer/bin/cheer
 | `CHEERER_EPIC_THRESHOLD` | 任务时长达到该秒数后自动进入 Epic 模式 | 正整数 | `60` |
 | `CHEERER_EPIC` | 单次运行强制开启 Epic 模式 | `true` / `false` | `false` |
 | `CHEERER_CUSTOM_ONLY` | 有自定义文案时仅使用自定义文案 | `true` / `false` | `false` |
+| `CHEERER_STYLE` | 鼓励风格 | `adaptive` / `balanced` / `hype` / `cozy` | `adaptive` |
+| `CHEERER_INTENSITY` | 鼓励强度 | `soft` / `normal` / `high` | `normal` |
 
 > `CHEERER_*` 环境变量优先级高于插件 `userConfig` 配置。
 
 ### 运行时行为
 
-- `CHEERER_MODE=auto` 时，`TaskCompleted` 会播放动画，`Stop` 默认只输出文字/语音。
+- `CHEERER_MODE=auto` 时，`TaskCompleted` 会播放动画，`Stop` 默认只输出文字/语音，除非 `CHEERER_INTENSITY=high`。
 - `CHEERER_MODE=full` 时，所有 Hook 都播放动画。
 - `CHEERER_MODE=text` 时，始终跳过动画，只输出鼓励文字/语音。
 - `CHEERER_ANIM=epic`、`CHEERER_EPIC=true`，或任务时长达到 `CHEERER_EPIC_THRESHOLD` 时，会依次播放三段动画。
 - `CHEERER_COOLDOWN` 的实际最小值为 1 秒，即使设置为 `0` 也会按 1 秒处理。
-- `CHEERER_DUMB=auto` 为默认行为；cheerer 也会自动检测 dumb terminal 和低色彩终端。
+- 冷却期间只会抑制动画；文字与语音输出仍然会继续。
+- `CHEERER_DUMB=auto` 为默认行为；cheerer 也会自动检测 dumb terminal 和空的 `TERM` 值并降级。
+- `CHEERER_STYLE=adaptive` 会结合 Hook 类型、任务时长、里程碑与最近历史来调整鼓励风格。
+- `CHEERER_INTENSITY=soft` 会让轻量完成更克制，`high` 会让庆祝更有冲劲，包括在 `CHEERER_MODE=auto` 下让 `Stop` Hook 也播放动画。
+- 文案按语言目录选择，并尽量避免连续重复。
 
 ## 🚀 直接使用
 
@@ -178,6 +186,16 @@ bash bin/cheer --stats
 
 - `--epic` —— 强制 Epic 模式（投篮 + 跳舞 + 烟花）
 - `--stats` —— 输出总触发次数、已达成里程碑、最后一次触发时间
+
+## 测试
+
+```bash
+bash tests/run.sh all
+bash tests/run.sh state
+bash tests/run.sh policy
+bash tests/run.sh render
+bash tests/run.sh integration
+```
 
 ## 📁 状态与数据文件
 
@@ -230,7 +248,7 @@ cheerer/
 ### 添加新动画
 
 1. 在 `scripts/animations/` 创建新的 `.sh` 文件
-2. 在 `scripts/cheer.sh` 的 `ANIMS` 数组中加入名称
+2. 在 `scripts/lib/policy.sh` 的 `policy_pick_animation` 候选列表里加入该动画名称
 3. 运行 `bash scripts/cheer.sh` 或 `CHEERER_ANIM=<name> bash scripts/cheer.sh` 验证脚本可正常执行
 
 ### 添加新语言
