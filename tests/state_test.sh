@@ -80,4 +80,43 @@ test_state_compute_streak() {
 }
 
 run_test "state_compute_streak" test_state_compute_streak
+
+test_state_read_stats_with_extra_fields() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  CHEERER_DATA_DIR="$tmp_dir/data"
+  mkdir -p "$CHEERER_DATA_DIR"
+  STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+  HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
+
+  # Include a field whose name contains "total_triggers" as a substring
+  printf '{"total_triggers_since_reset":99,"total_triggers":42,"last_trigger":"2026-04-11","milestones":[10,25]}\n' > "$STATS_FILE"
+
+  state_read_stats
+
+  assert_eq "42" "$STATS_TOTAL_TRIGGERS"
+  assert_eq "2026-04-11" "$STATS_LAST_TRIGGER"
+  assert_eq "[10,25]" "$STATS_MILESTONES"
+}
+
+run_test "state_read_stats_with_extra_fields" test_state_read_stats_with_extra_fields
+
+test_state_read_stats_with_escaped_quotes() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  CHEERER_DATA_DIR="$tmp_dir/data"
+  mkdir -p "$CHEERER_DATA_DIR"
+  STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+  HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
+
+  printf '{"total_triggers":7,"last_trigger":"2026-04-11T12:00:00+08:00","milestones":[]}\n' > "$STATS_FILE"
+
+  state_read_stats
+
+  assert_eq "7" "$STATS_TOTAL_TRIGGERS"
+  assert_eq "2026-04-11T12:00:00+08:00" "$STATS_LAST_TRIGGER"
+  assert_eq "[]" "$STATS_MILESTONES"
+}
+
+run_test "state_read_stats_with_escaped_quotes" test_state_read_stats_with_escaped_quotes
 finish_tests

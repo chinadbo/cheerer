@@ -16,9 +16,16 @@ state_write_stats() {
 state_read_stats() {
   local raw
   raw="$(cat "$STATS_FILE" 2>/dev/null || true)"
-  STATS_TOTAL_TRIGGERS="$(printf '%s' "$raw" | grep -o '"total_triggers":[0-9]*' | cut -d: -f2)"
-  STATS_LAST_TRIGGER="$(printf '%s' "$raw" | grep -o '"last_trigger":"[^"]*"' | cut -d'"' -f4)"
-  STATS_MILESTONES="$(printf '%s' "$raw" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)"
+  STATS_TOTAL_TRIGGERS="${raw#*\"total_triggers\":}"
+  STATS_TOTAL_TRIGGERS="${STATS_TOTAL_TRIGGERS%%,*}"
+  STATS_TOTAL_TRIGGERS="${STATS_TOTAL_TRIGGERS%%\}*}"
+  STATS_TOTAL_TRIGGERS="${STATS_TOTAL_TRIGGERS// /}"
+
+  STATS_LAST_TRIGGER="${raw#*\"last_trigger\":\"}"
+  STATS_LAST_TRIGGER="${STATS_LAST_TRIGGER%%\"*}"
+
+  STATS_MILESTONES="${raw#*\"milestones\":}"
+  STATS_MILESTONES="${STATS_MILESTONES%%\}*}"
 
   [[ "$STATS_TOTAL_TRIGGERS" =~ ^[0-9]+$ ]] || return 1
   [[ -n "${STATS_MILESTONES:-}" ]] || STATS_MILESTONES='[]'
