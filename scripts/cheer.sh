@@ -54,6 +54,10 @@ fi
 . "$SCRIPT_DIR/lib/render.sh"
 
 state_init
+CHEERER_FIRST_RUN="false"
+if [[ "${STATS_TOTAL_TRIGGERS:-0}" -eq 0 ]]; then
+  CHEERER_FIRST_RUN="true"
+fi
 CURRENT_TS=$(date +%s 2>/dev/null || echo 0)
 CURRENT_ISO=$(date -Iseconds 2>/dev/null || date)
 export CHEERER_HOUR="${CHEERER_HOUR:-$(date +%H 2>/dev/null || echo 12)}"

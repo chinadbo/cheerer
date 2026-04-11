@@ -89,6 +89,32 @@ render_emit() {
   local voice_script="$VOICE_DIR/cheer_${CHEERER_LANG}.sh"
   local anim_name
 
+  if [[ "${CHEERER_FIRST_RUN:-false}" == "true" ]]; then
+    if [[ "${CHEERER_DUMB:-false}" == "true" ]]; then
+      echo ""
+      echo "  cheerer — Welcome!"
+      echo ""
+      echo "  Your celebration plugin is active."
+      echo "  Animations and encouragement will play when you complete tasks."
+      echo ""
+      echo "  Configure: cheer --list"
+      echo "  Preview:   cheer --preview"
+      echo "  Stats:     cheer --stats"
+      echo ""
+    else
+      echo ""
+      echo -e "\033[1;36m  cheerer — Welcome!\033[0m"
+      echo ""
+      echo "  Your celebration plugin is active."
+      echo "  Animations and encouragement will play when you complete tasks."
+      echo ""
+      echo -e "  Configure: \033[1mcheer --list\033[0m"
+      echo -e "  Preview:   \033[1mcheer --preview\033[0m"
+      echo -e "  Stats:     \033[1mcheer --stats\033[0m"
+      echo ""
+    fi
+  fi
+
   if [[ "$RENDER_ANIMATE" == "true" ]] && [[ "$IN_COOLDOWN" == "false" ]]; then
     if [[ "${CHEERER_ANIM:-random}" == "epic" ]]; then
       for anim_file in "$ANIM_DIR"/*.sh; do
