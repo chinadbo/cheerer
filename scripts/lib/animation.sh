@@ -117,6 +117,9 @@ anim_cleanup() {
 anim_danmaku_run() {
   local tick="${DANMAKU_TICK:-0.07}"
   local total="${DANMAKU_FRAMES:-30}"
+  if [[ "${CHEERER_ANIM_DURATION:-}" =~ ^[0-9]+$ ]] && [[ "$CHEERER_ANIM_DURATION" -ge 5 ]]; then
+    total="$CHEERER_ANIM_DURATION"
+  fi
   _ANIM_FRAME=0
 
   ANIM_TERM_WIDTH="$(anim_term_width)"

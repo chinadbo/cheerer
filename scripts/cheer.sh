@@ -74,6 +74,7 @@ fi
 CURRENT_TS=$(date +%s 2>/dev/null || echo 0)
 CURRENT_ISO=$(date -Iseconds 2>/dev/null || date)
 export CHEERER_HOUR="${CHEERER_HOUR:-$(date +%H 2>/dev/null || echo 12)}"
+export CHEERER_ANIM_DURATION="${CHEERER_ANIM_DURATION:-}"
 RECENT_TASKCOMPLETED_COUNT=$(state_recent_count $((CURRENT_TS - 300)) "TaskCompleted")
 SESSION_STREAK=$(state_recent_count $((CURRENT_TS - 1800)) "TaskCompleted")
 RECENT_ANIMATIONS="$(state_recent_values_csv 6 3)"

@@ -441,4 +441,26 @@ run_test "disable_writes_config" test_disable_writes_config
 run_test "enable_removes_config" test_enable_removes_config
 run_test "disabled_cheerer_exits_silently" test_disabled_cheerer_exits_silently
 run_test "config_sh_only_allows_cheerer_vars" test_config_sh_only_allows_cheerer_vars
+
+test_anim_duration_override_short() {
+  local output
+  output="$(CHEERER_ANIM_DURATION=5 CHEERER_MESSAGE="DurationTest" bash scripts/animations/dance.sh 2>&1)"
+  assert_contains "$output" "DurationTest"
+}
+
+test_anim_duration_override_invalid_ignored() {
+  local output
+  output="$(CHEERER_ANIM_DURATION=abc CHEERER_MESSAGE="InvalidDurTest" bash scripts/animations/dance.sh 2>&1)"
+  assert_contains "$output" "InvalidDurTest"
+}
+
+test_anim_duration_override_below_minimum() {
+  local output
+  output="$(CHEERER_ANIM_DURATION=2 CHEERER_MESSAGE="MinDurTest" bash scripts/animations/dance.sh 2>&1)"
+  assert_contains "$output" "MinDurTest"
+}
+
+run_test "anim_duration_override_short" test_anim_duration_override_short
+run_test "anim_duration_override_invalid_ignored" test_anim_duration_override_invalid_ignored
+run_test "anim_duration_override_below_minimum" test_anim_duration_override_below_minimum
 finish_tests
