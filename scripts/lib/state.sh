@@ -7,8 +7,10 @@ state_defaults() {
 }
 
 state_write_stats() {
+  local tmp="${STATS_FILE}.tmp.$$"
   printf '{"total_triggers":%s,"last_trigger":"%s","milestones":%s}\n' \
-    "$STATS_TOTAL_TRIGGERS" "$STATS_LAST_TRIGGER" "$STATS_MILESTONES" > "$STATS_FILE"
+    "$STATS_TOTAL_TRIGGERS" "$STATS_LAST_TRIGGER" "$STATS_MILESTONES" > "$tmp"
+  mv "$tmp" "$STATS_FILE"
 }
 
 state_read_stats() {
@@ -145,8 +147,8 @@ state_daily_counts() {
 
 state_most_used() {
   local field_index="$1"
-  local counts="$TMPDIR/cheerer_counts_$$"
-  : > "$counts"
+  local counts
+  counts="$(mktemp "${TMPDIR:-/tmp}/cheerer_counts.XXXXXX")"
 
   cut -d'|' -f"$field_index" "$HISTORY_FILE" | sort | uniq -c | sort -rn > "$counts"
   head -1 "$counts" | awk '{print $2}'

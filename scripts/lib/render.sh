@@ -103,14 +103,14 @@ render_emit() {
       echo ""
     else
       echo ""
-      echo -e "\033[1;36m  cheerer — Welcome!\033[0m"
+      printf '\033[1;36m  cheerer — Welcome!\033[0m\n'
       echo ""
       echo "  Your celebration plugin is active."
       echo "  Animations and encouragement will play when you complete tasks."
       echo ""
-      echo -e "  Configure: \033[1mcheer --list\033[0m"
-      echo -e "  Preview:   \033[1mcheer --preview\033[0m"
-      echo -e "  Stats:     \033[1mcheer --stats\033[0m"
+      printf '  Configure: \033[1mcheer --list\033[0m\n'
+      printf '  Preview:   \033[1mcheer --preview\033[0m\n'
+      printf '  Stats:     \033[1mcheer --stats\033[0m\n'
       echo ""
     fi
   fi

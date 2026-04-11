@@ -15,7 +15,7 @@ CHEERER_DUMB="${CHEERER_DUMB:-false}"
 if [[ "$CHEERER_DUMB" == "true" ]]; then
   echo "🎉 $MSG"
 else
-  echo -e "\033[1;32m🎉 $MSG\033[0m"
+  printf '\033[1;32m🎉 %s\033[0m\n' "$MSG"
 fi
 
 CHEERER_VOICE="${CHEERER_VOICE:-on}"

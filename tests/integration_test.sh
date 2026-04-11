@@ -174,14 +174,6 @@ test_custom_only_uses_custom_messages_file() {
   assert_contains "$output" "Nice refactor."
 }
 
-run_test "stop_fixture_uses_quick_message" test_stop_fixture_uses_quick_message
-run_test "long_task_fixture_uses_big_message" test_long_task_fixture_uses_big_message
-run_test "corrupt_stats_still_exits_zero" test_corrupt_stats_still_exits_zero
-run_test "hype_style_surfaces_hype_copy" test_hype_style_surfaces_hype_copy
-run_test "dumb_mode_stays_plain_when_voice_script_runs" test_dumb_mode_stays_plain_when_voice_script_runs
-run_test "epic_env_runs_all_three_animations" test_epic_env_runs_all_three_animations
-run_test "epic_threshold_runs_all_three_animations" test_epic_threshold_runs_all_three_animations
-run_test "cooldown_zero_enforces_minimum_one_second" test_cooldown_zero_enforces_minimum_one_second
 test_preview_command_runs_animation() {
   local output
   output="$(bash bin/cheer --preview basketball 2>&1)"

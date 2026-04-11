@@ -6,7 +6,12 @@ if [[ "${1:-}" == "--epic" ]]; then
   shift
 fi
 
-if [[ "${1:-}" == "--stats" ]]; then
+if [[ "${1:-}" == "--version" ]]; then
+  printf 'cheerer %s\n' "$(grep '"version"' "$SCRIPT_DIR/package.json" | cut -d'"' -f4)"
+  exit 0
+fi
+
+_cheerer_stats() {
   CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
   STATS_FILE="$CHEERER_DATA_DIR/stats.json"
   HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
@@ -16,7 +21,6 @@ if [[ "${1:-}" == "--stats" ]]; then
     exit 0
   fi
 
-  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
   . "$SCRIPT_DIR/scripts/lib/state.sh"
 
   state_read_stats || state_defaults
@@ -27,13 +31,15 @@ if [[ "${1:-}" == "--stats" ]]; then
   printf "  Total celebrations:   %s\n" "${STATS_TOTAL_TRIGGERS:-0}"
 
   if [[ -f "$HISTORY_FILE" ]] && [[ -s "$HISTORY_FILE" ]]; then
+    local streak
     streak="$(state_compute_streak)"
-    printf "  Current streak:       %s (last 30 min)\n" "$streak"
+    printf "  Best streak:          %s (last 30 min)\n" "$streak"
 
     echo ""
     echo "  Last 7 days:"
 
     local max_count=1
+    local daily_raw
     daily_raw="$(state_daily_counts 7)"
     while IFS='|' read -r d c; do
       [[ "$c" -gt "$max_count" ]] && max_count="$c"
@@ -78,10 +84,9 @@ if [[ "${1:-}" == "--stats" ]]; then
 
   echo ""
   exit 0
-fi
+}
 
-if [[ "${1:-}" == "--list" ]]; then
-  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+_cheerer_list() {
   echo "Animations:"
   for f in "$SCRIPT_DIR/scripts/animations"/*.sh; do
     [[ -f "$f" ]] || continue
@@ -89,12 +94,11 @@ if [[ "${1:-}" == "--list" ]]; then
   done
   echo "Languages: zh, en, ja, ko, es"
   exit 0
-fi
+}
 
-if [[ "${1:-}" == "--preview" ]]; then
-  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-  ANIM_NAME="${2:-}"
-  ANIM_DIR="$SCRIPT_DIR/scripts/animations"
+_cheerer_preview() {
+  local ANIM_NAME="${1:-}"
+  local ANIM_DIR="$SCRIPT_DIR/scripts/animations"
 
   if [[ -z "$ANIM_NAME" ]]; then
     local anims=()
@@ -105,6 +109,11 @@ if [[ "${1:-}" == "--preview" ]]; then
     ANIM_NAME="${anims[$((RANDOM % ${#anims[@]}))]}"
   fi
 
+  if [[ ! "$ANIM_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "Invalid animation name: $ANIM_NAME"
+    exit 1
+  fi
+
   if [[ -f "$ANIM_DIR/$ANIM_NAME.sh" ]]; then
     bash "$ANIM_DIR/$ANIM_NAME.sh"
   else
@@ -113,6 +122,19 @@ if [[ "${1:-}" == "--preview" ]]; then
     exit 1
   fi
   exit 0
+}
+
+if [[ "${1:-}" == "--stats" ]]; then
+  _cheerer_stats
+fi
+
+if [[ "${1:-}" == "--list" ]]; then
+  _cheerer_list
+fi
+
+if [[ "${1:-}" == "--preview" ]]; then
+  shift
+  _cheerer_preview "$@"
 fi
 
 exec "$SCRIPT_DIR/scripts/cheer.sh" "$@"

@@ -67,7 +67,12 @@ RECENT_ANIMATIONS="$(state_recent_values_csv 6 3)"
 RECENT_MESSAGE_IDS="$(state_recent_values_csv 7 3)"
 IN_COOLDOWN="false"
 
-COOLDOWN_FILE="/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}"
+_safe_session_id="${CLAUDE_SESSION_ID:-default}"
+_safe_session_id="${_safe_session_id//[^a-zA-Z0-9._-]/}"
+_safe_session_id="${_safe_session_id:0:64}"
+CHEERER_TMP_DIR="${TMPDIR:-/tmp}/cheerer_${UID}"
+mkdir -p -m 700 "$CHEERER_TMP_DIR" 2>/dev/null || true
+COOLDOWN_FILE="$CHEERER_TMP_DIR/last_trigger_${_safe_session_id:-default}"
 _EFFECTIVE_COOLDOWN="${CHEERER_COOLDOWN:-3}"
 if [[ "$_EFFECTIVE_COOLDOWN" =~ ^[0-9]+$ ]] && [[ "$_EFFECTIVE_COOLDOWN" -lt 1 ]]; then
   _EFFECTIVE_COOLDOWN=1
@@ -91,7 +96,11 @@ fi
 state_record_trigger "$CURRENT_ISO"
 policy_select_celebration
 if [[ "$CHEERER_ANIM" != "random" ]] && [[ "$CHEERER_ANIM" != "epic" ]]; then
-  POLICY_ANIMATION="$CHEERER_ANIM"
+  if [[ "$CHEERER_ANIM" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    POLICY_ANIMATION="$CHEERER_ANIM"
+  else
+    CHEERER_ANIM="random"
+  fi
 fi
 render_select_message
 render_should_animate
