@@ -14,6 +14,7 @@ run_cheer() {
   CHEERER_DUMB="true" \
   CHEERER_STYLE="adaptive" \
   CHEERER_INTENSITY="normal" \
+  CHEERER_HOUR=15 \
   bash scripts/cheer.sh < "$fixture"
 }
 
@@ -48,6 +49,7 @@ run_epic_probe() {
     CHEERER_VOICE="off" \
     CHEERER_DUMB="false" \
     CHEERER_MODE="full" \
+    CHEERER_HOUR=15 \
     "$env_name=$env_value" \
     bash "$app_root/scripts/cheer.sh" < "$fixture" > "$output_file"
 
@@ -89,6 +91,7 @@ test_corrupt_stats_still_exits_zero() {
   CHEERER_LANG="en" \
   CHEERER_VOICE="off" \
   CHEERER_DUMB="true" \
+  CHEERER_HOUR=15 \
   bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json > "$output_file"
 
   assert_contains "$(cat "$output_file")" "Strong work"
@@ -96,13 +99,13 @@ test_corrupt_stats_still_exits_zero() {
 
 test_hype_style_surfaces_hype_copy() {
   local output
-  output="$(CLAUDE_PLUGIN_DATA="$(make_tmp_dir)/data" CLAUDE_SESSION_ID="test-session" CHEERER_LANG="en" CHEERER_VOICE="off" CHEERER_DUMB="true" CHEERER_STYLE="hype" bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+  output="$(CLAUDE_PLUGIN_DATA="$(make_tmp_dir)/data" CLAUDE_SESSION_ID="test-session" CHEERER_LANG="en" CHEERER_VOICE="off" CHEERER_DUMB="true" CHEERER_STYLE="hype" CHEERER_HOUR=15 bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
   assert_contains "$output" "Huge energy"
 }
 
 test_dumb_mode_stays_plain_when_voice_script_runs() {
   local output
-  output="$(CLAUDE_PLUGIN_DATA="$(make_tmp_dir)/data" CLAUDE_SESSION_ID="plain-test" CHEERER_LANG="en" CHEERER_VOICE="off" CHEERER_DUMB="true" bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+  output="$(CLAUDE_PLUGIN_DATA="$(make_tmp_dir)/data" CLAUDE_SESSION_ID="plain-test" CHEERER_LANG="en" CHEERER_VOICE="off" CHEERER_DUMB="true" CHEERER_HOUR=15 bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
   assert_contains "$output" "🎉 Strong work"
   assert_not_contains "$output" $'\033[1;32m'
 }
@@ -132,6 +135,7 @@ test_cooldown_zero_enforces_minimum_one_second() {
     CHEERER_VOICE="off" \
     CHEERER_DUMB="true" \
     CHEERER_COOLDOWN="0" \
+    CHEERER_HOUR=15 \
     bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
 
   output2="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
@@ -140,6 +144,7 @@ test_cooldown_zero_enforces_minimum_one_second() {
     CHEERER_VOICE="off" \
     CHEERER_DUMB="true" \
     CHEERER_COOLDOWN="0" \
+    CHEERER_HOUR=15 \
     bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
 
   # Both runs must produce non-empty output
@@ -159,6 +164,7 @@ test_custom_only_uses_custom_messages_file() {
     CHEERER_VOICE="off" \
     CHEERER_DUMB="true" \
     CHEERER_CUSTOM_ONLY="true" \
+    CHEERER_HOUR=15 \
     bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
 
   # Should pick one of the custom messages, not built-in catalog text

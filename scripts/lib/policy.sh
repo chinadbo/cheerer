@@ -1,5 +1,26 @@
 #!/bin/bash
 
+_policy_apply_time_of_day() {
+  local hour="${CHEERER_HOUR:-$(date +%H 2>/dev/null || echo 12)}"
+  hour="${hour#0}"
+
+  # Morning (6-12): +1 mood energy
+  if [[ "$hour" -ge 6 ]] && [[ "$hour" -lt 12 ]]; then
+    if [[ "$POLICY_MOOD" == "gentle" ]]; then
+      POLICY_MOOD="steady"
+    elif [[ "$POLICY_MOOD" == "steady" ]]; then
+      POLICY_MOOD="rapid_fire"
+    fi
+  fi
+
+  # Late night (22-6): cozy override for quick/solid
+  if [[ "$hour" -ge 22 ]] || [[ "$hour" -lt 6 ]]; then
+    if [[ "$POLICY_TIER" == "quick" ]] || [[ "$POLICY_TIER" == "solid" ]]; then
+      POLICY_MOOD="cozy"
+    fi
+  fi
+}
+
 policy_pick_animation() {
   local recent_csv=",${RECENT_ANIMATIONS:-},"
   local candidate candidates=()
@@ -50,6 +71,8 @@ policy_select_celebration() {
     POLICY_ANIMATION="fireworks"
     return 0
   fi
+
+  _policy_apply_time_of_day
 
   case "${CHEERER_STYLE:-adaptive}" in
     hype)

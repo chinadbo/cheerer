@@ -13,6 +13,8 @@ test_stop_defaults_to_quick_gentle() {
   CHEERER_STYLE="adaptive"
   CHEERER_INTENSITY="normal"
   RECENT_ANIMATIONS=""
+  ANIM_DIR="$PWD/scripts/animations"
+  CHEERER_HOUR=15
 
   policy_select_celebration
 
@@ -135,4 +137,42 @@ run_test "rapid_fire_count_sets_solid_rapid_fire_mood" test_rapid_fire_count_set
 run_test "animation_discovers_from_anim_dir" test_animation_discovers_from_anim_dir
 run_test "animation_avoids_recent_picks" test_animation_avoids_recent_picks
 run_test "animation_falls_back_when_all_recent" test_animation_falls_back_when_all_recent
+
+test_morning_upgrades_gentle_to_steady() {
+  HOOK_EVENT="Stop"
+  TASK_DURATION=5
+  RECENT_TASKCOMPLETED_COUNT=0
+  SESSION_STREAK=0
+  STATE_MILESTONE_MSG=""
+  CHEERER_STYLE="adaptive"
+  CHEERER_INTENSITY="normal"
+  RECENT_ANIMATIONS=""
+  ANIM_DIR="$PWD/scripts/animations"
+  CHEERER_HOUR=9
+
+  policy_select_celebration
+
+  assert_eq "quick" "$POLICY_TIER"
+  assert_eq "steady" "$POLICY_MOOD"
+}
+
+test_late_night_overrides_to_cozy() {
+  HOOK_EVENT="TaskCompleted"
+  TASK_DURATION=10
+  RECENT_TASKCOMPLETED_COUNT=0
+  SESSION_STREAK=0
+  STATE_MILESTONE_MSG=""
+  CHEERER_STYLE="adaptive"
+  CHEERER_INTENSITY="normal"
+  RECENT_ANIMATIONS=""
+  ANIM_DIR="$PWD/scripts/animations"
+  CHEERER_HOUR=23
+
+  policy_select_celebration
+
+  assert_eq "cozy" "$POLICY_MOOD"
+}
+
+run_test "morning_upgrades_gentle_to_steady" test_morning_upgrades_gentle_to_steady
+run_test "late_night_overrides_to_cozy" test_late_night_overrides_to_cozy
 finish_tests
