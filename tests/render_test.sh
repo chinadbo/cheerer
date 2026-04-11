@@ -180,6 +180,34 @@ test_render_custom_only_falls_back_when_file_absent() {
   assert_eq "en_solid_steady_1" "$RENDER_MESSAGE_ID"
 }
 
+test_voice_script_uses_cheerer_message() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/voices"
+  cat > "$tmp_dir/voices/cheer_en.sh" << 'VOICE_EOF'
+#!/bin/bash
+if [[ -n "${CHEERER_MESSAGE:-}" ]]; then
+  MSG="$CHEERER_MESSAGE"
+else
+  MSG="fallback message"
+fi
+CHEERER_DUMB="true"
+CHEERER_VOICE="off"
+echo "🎉 $MSG"
+VOICE_EOF
+  chmod +x "$tmp_dir/voices/cheer_en.sh"
+
+  export CHEERER_MESSAGE="Test message from catalog"
+  export CHEERER_DUMB="true"
+  export CHEERER_VOICE="off"
+  export CHEERER_MESSAGE_ID="test_id"
+
+  local result
+  result="$(bash "$tmp_dir/voices/cheer_en.sh")"
+
+  assert_contains "$result" "Test message from catalog"
+}
+
 run_test "render_selects_exact_tier_and_mood" test_render_selects_exact_tier_and_mood
 run_test "render_avoids_recent_message_ids" test_render_avoids_recent_message_ids
 run_test "soft_intensity_skips_quick_animation" test_soft_intensity_skips_quick_animation
@@ -190,4 +218,5 @@ run_test "render_solid_streak_picks_catalog_row" test_render_solid_streak_picks_
 run_test "render_solid_triumphant_picks_catalog_row" test_render_solid_triumphant_picks_catalog_row
 run_test "render_custom_only_uses_custom_file" test_render_custom_only_uses_custom_file
 run_test "render_custom_only_falls_back_when_file_absent" test_render_custom_only_falls_back_when_file_absent
+run_test "voice_script_uses_cheerer_message" test_voice_script_uses_cheerer_message
 finish_tests
