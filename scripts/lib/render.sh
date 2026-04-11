@@ -30,6 +30,16 @@ render_select_message() {
   local tier mood message_id message_text
   local recent_csv=",${RECENT_MESSAGE_IDS:-},"
 
+  local _fatigue_count _fatigue_mid _last5
+  _last5="${RECENT_MESSAGE_IDS:-}"
+  _last5="$(printf '%s' "$_last5" | tr ',' '\n' | tail -5)"
+  if [[ -n "$_last5" ]]; then
+    read -r _fatigue_count _fatigue_mid <<< "$(printf '%s' "$_last5" | sort | uniq -c | sort -rn | head -1)"
+    if [[ "${_fatigue_count:-0}" -ge 3 ]]; then
+      recent_csv="${recent_csv}${_fatigue_mid},"
+    fi
+  fi
+
   if [[ -n "${CHEERER_CUSTOM_MSG:-}" ]]; then
     RENDER_MESSAGE_ID="custom"
     RENDER_MESSAGE_TEXT="$CHEERER_CUSTOM_MSG"

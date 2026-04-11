@@ -219,4 +219,37 @@ run_test "render_solid_triumphant_picks_catalog_row" test_render_solid_triumphan
 run_test "render_custom_only_uses_custom_file" test_render_custom_only_uses_custom_file
 run_test "render_custom_only_falls_back_when_file_absent" test_render_custom_only_falls_back_when_file_absent
 run_test "voice_script_uses_cheerer_message" test_voice_script_uses_cheerer_message
+
+test_render_fatigue_forces_different_message() {
+  CHEERER_ROOT="$PWD"
+  CHEERER_LANG="en"
+  POLICY_TIER="solid"
+  POLICY_MOOD="steady"
+  RECENT_MESSAGE_IDS="en_solid_steady_1,en_solid_steady_1,en_solid_steady_1,en_solid_steady_2"
+  STATE_MILESTONE_MSG=""
+  CHEERER_CUSTOM_ONLY="false"
+  CHEERER_CUSTOM_MSG=""
+
+  render_select_message
+
+  [[ "$RENDER_MESSAGE_ID" != "en_solid_steady_1" ]] || return 1
+}
+
+test_render_no_fatigue_below_threshold() {
+  CHEERER_ROOT="$PWD"
+  CHEERER_LANG="en"
+  POLICY_TIER="solid"
+  POLICY_MOOD="steady"
+  RECENT_MESSAGE_IDS="en_solid_steady_1,en_solid_steady_1"
+  STATE_MILESTONE_MSG=""
+  CHEERER_CUSTOM_ONLY="false"
+  CHEERER_CUSTOM_MSG=""
+
+  render_select_message
+
+  assert_eq "en_solid_steady_2" "$RENDER_MESSAGE_ID"
+}
+
+run_test "render_fatigue_forces_different_message" test_render_fatigue_forces_different_message
+run_test "render_no_fatigue_below_threshold" test_render_no_fatigue_below_threshold
 finish_tests
