@@ -51,13 +51,13 @@ Epic mode also auto-discovers: iterate all `*.sh` in animations dir.
 
 ### 2. Three New Animations
 
-| Animation | Concept | Frames | Duration |
-|-----------|---------|--------|----------|
-| `rocket` | Countdown → ignition → liftoff → stars | 6 | ~2.5s |
-| `trophy` | Trophy slides in → spotlight → sparkles | 5 | ~2.2s |
-| `wave` | Ocean swell → surfer rides → celebration | 5 | ~2.3s |
+| Animation | Concept | Rows | Frames | Duration |
+|-----------|---------|------|--------|----------|
+| `rocket` | Countdown → ignition → liftoff → stars danmaku | 6 | 30 | ~2.1s |
+| `trophy` | Trophy slides in → spotlight → sparkles danmaku | 6 | 30 | ~2.1s |
+| `wave` | Ocean swell → surfer rides → celebration danmaku | 6 | 30 | ~2.1s |
 
-Each follows the existing pattern: `tput civis`, frame functions, cursor rewind, `tput cnorm`, clean exit. Same 10-row canvas with border.
+Each follows the danmaku pattern: source `animation.sh`, set `DANMAKU_*` arrays (`DANMAKU_ROWS`, `DANMAKU_TICK`, `DANMAKU_FRAMES`, `DANMAKU_ROW`, `DANMAKU_TEXT`, `DANMAKU_COLOR`, `DANMAKU_SPEED`, `DANMAKU_DELAY`), then call `anim_danmaku_run`. Floating subtitles scroll right-to-left at configurable rows, speeds, and delays.
 
 ### 3. Expanded Message Catalogs
 

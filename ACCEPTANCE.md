@@ -1,8 +1,10 @@
-# Acceptance Test Report — cheerer V1.0
+# Acceptance Test Report — cheerer
 
-**日期：** 2026-04-07  
-**验证人：** Claude Code (claude-sonnet-4-6)  
-**代码路径：** `/root/code/cheerer/`  
+> **Note:** This is the v1.0 acceptance report. v2.0 introduced danmaku animations, three new animation themes (rocket, trophy, wave), Korean and Spanish languages, auto-discovery, context-aware celebration pipeline, and new CLI commands. The v2.0 changes are additive — all v1.0 acceptance criteria continue to pass.
+
+**日期：** 2026-04-07
+**验证人：** Claude Code (claude-sonnet-4-6)
+**代码路径：** `/root/code/cheerer/`
 **PRD 路径：** `/root/.openclaw/workspace-guli-pm/prd/cheerer-prd.md`
 
 ---

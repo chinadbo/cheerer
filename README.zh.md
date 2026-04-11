@@ -6,21 +6,21 @@
 
 **语言：** [English](README.md) | 中文 | [日本語](README.ja.md)
 
-每当 Claude Code 完成任务时，在终端播放像素动画 + 多语言语音鼓励，让编码更快乐！
+每当 Claude Code 完成任务时，在终端播放弹幕动画 + 多语言语音鼓励，让编码更快乐！
 
 ## ✨ 功能
 
-- 🏀 投篮、跳舞、烟花三种终端动画
-- 🔊 多语言语音鼓励（中文 / 英文 / 日文）
+- 🏀 六种弹幕动画：basketball、dance、fireworks、rocket、trophy、wave
+- 🔊 多语言语音鼓励（中文 / 英文 / 日文 / 韩文 / 西班牙文）
 - 🎲 随机选择动画，也可以强制指定动画
-- 🚀 Epic 模式会依次播放三段动画
+- 🚀 Epic 模式会依次播放六段动画
 - 📊 触发统计与里程碑庆祝（`--stats`、里程碑烟花）
 - 📝 支持从 `custom-messages.txt` 加载自定义鼓励语
 - 🖥️ 自动 dumb terminal 降级与按会话隔离的冷却机制
 
 ## 🎬 演示说明
 
-当 Claude Code 完成任务后，终端会即时播放一段像素动画，并用对应语言送上一句鼓励。这里先保留文字说明占位，后续会补充 GIF 演示。
+当 Claude Code 完成任务后，终端会即时播放一段弹幕动画（浮动字幕从右向左滚动），并用对应语言送上一句鼓励。这里先保留文字说明占位，后续会补充 GIF 演示。
 
 ## 📦 安装
 
@@ -56,7 +56,7 @@ claude plugin install cheerer@cheerer
         "source": "github",
         "repo": "chinadbo/cheerer"
       },
-      "description": "任务完成时播放像素动画 + 语音鼓励"
+      "description": "任务完成时播放弹幕动画 + 语音鼓励"
     }
   ]
 }
@@ -120,8 +120,8 @@ chmod +x ~/.cheerer/bin/cheer
 
 ```
 /plugin enable cheerer
-> 语音语言（zh / en / ja）：zh
-> 动画类型（random / basketball / dance / fireworks / epic）：random
+> 语音语言（zh / en / ja / ko / es）：zh
+> 动画类型（random / basketball / dance / fireworks / rocket / trophy / wave / epic）：random
 > 启用语音（on / off）：on
 > 鼓励风格（adaptive / balanced / hype / cozy）：adaptive
 > 鼓励强度（soft / normal / high）：normal
@@ -136,8 +136,8 @@ chmod +x ~/.cheerer/bin/cheer
 | 变量 | 说明 | 可选值 | 默认值 |
 |------|------|--------|---------|
 | `CHEERER_ENABLED` | 主开关 | `true` / `false` | `true` |
-| `CHEERER_LANG` | 语音语言 | `zh` / `en` / `ja` | `zh` |
-| `CHEERER_ANIM` | 动画类型 | `basketball` / `dance` / `fireworks` / `epic` / `random` | `random` |
+| `CHEERER_LANG` | 语音语言 | `zh` / `en` / `ja` / `ko` / `es` | `zh` |
+| `CHEERER_ANIM` | 动画类型 | `basketball` / `dance` / `fireworks` / `rocket` / `trophy` / `wave` / `epic` / `random` | `random` |
 | `CHEERER_VOICE` | 语音开关 | `on` / `off` / `true` / `false` | `on` |
 | `CHEERER_DUMB` | 强制纯文本降级或保持自动检测 | `auto` / `true` / `false` | `auto` |
 | `CHEERER_MODE` | 输出模式 | `auto` / `full` / `text` | `auto` |
@@ -155,7 +155,7 @@ chmod +x ~/.cheerer/bin/cheer
 - `CHEERER_MODE=auto` 时，`TaskCompleted` 会播放动画，`Stop` 默认只输出文字/语音，除非 `CHEERER_INTENSITY=high`。
 - `CHEERER_MODE=full` 时，所有 Hook 都播放动画。
 - `CHEERER_MODE=text` 时，始终跳过动画，只输出鼓励文字/语音。
-- `CHEERER_ANIM=epic`、`CHEERER_EPIC=true`，或任务时长达到 `CHEERER_EPIC_THRESHOLD` 时，会依次播放三段动画。
+- `CHEERER_ANIM=epic`、`CHEERER_EPIC=true`，或任务时长达到 `CHEERER_EPIC_THRESHOLD` 时，会依次播放六段动画。
 - `CHEERER_COOLDOWN` 的实际最小值为 1 秒，即使设置为 `0` 也会按 1 秒处理。
 - 冷却期间只会抑制动画；文字与语音输出仍然会继续。
 - `CHEERER_DUMB=auto` 为默认行为；cheerer 也会自动检测 dumb terminal 和空的 `TERM` 值并降级。
@@ -180,12 +180,16 @@ CHEERER_DUMB=true bash scripts/cheer.sh
 # 包装命令
 bash bin/cheer --epic
 bash bin/cheer --stats
+bash bin/cheer --preview
+bash bin/cheer --list
 ```
 
-`bin/cheer` 目前只支持两个 flag：
+`bin/cheer` 支持四个 flag：
 
-- `--epic` —— 强制 Epic 模式（投篮 + 跳舞 + 烟花）
+- `--epic` —— 强制 Epic 模式（依次播放六段动画）
 - `--stats` —— 输出总触发次数、已达成里程碑、最后一次触发时间
+- `--preview [name]` —— 不触发 Hook 直接播放动画；`name` 可选，省略则随机
+- `--list` —— 列出所有可用动画和语言
 
 ## 测试
 
@@ -202,6 +206,7 @@ bash tests/run.sh integration
 默认情况下，cheerer 会把插件数据保存到 `${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}`：
 
 - `stats.json` —— 记录总触发次数、最后触发时间、里程碑历史
+- `history.log` —— 每次触发的详细记录（时间戳、事件、时长、等级、情绪、动画、消息 id）；保留最近 50 行
 - `custom-messages.txt` —— 可选的自定义鼓励文案，一行一条，`#` 开头表示注释
 
 冷却状态单独保存在 `/tmp/cheerer_last_trigger_${CLAUDE_SESSION_ID:-default}`。
@@ -212,7 +217,7 @@ bash tests/run.sh integration
 
 - **纯 Shell 实现**，零外部依赖
 - **ANSI escape code** 控制颜色 + 光标位置
-- **帧动画**：利用光标回退 (`\033[11A`) 原位重绘
+- **弹幕引擎**：浮动字幕以可配置的行数、速度和延迟从右向左滚动
 - **语音降级**：macOS `say` → `espeak` → 纯文字
 - **动画时长**：约 2~3 秒，不阻塞工作流
 - **终端兼容**：自动识别 dumb terminal 并降级输出
@@ -224,19 +229,42 @@ cheerer/
 ├── .claude-plugin/
 │   └── plugin.json          # 插件 manifest
 ├── bin/
-│   └── cheer                # 包装命令（--epic、--stats）
+│   └── cheer                # 包装命令（--epic、--stats、--preview、--list）
 ├── hooks/
 │   └── hooks.json           # Hook 配置
 ├── scripts/
 │   ├── cheer.sh             # 主入口（Hook 路由 + 状态 + 统计）
 │   ├── animations/
-│   │   ├── basketball.sh    # 投篮像素动画
-│   │   ├── dance.sh         # 二次元跳舞
-│   │   └── fireworks.sh     # 烟花
+│   │   ├── basketball.sh    # 投篮弹幕主题
+│   │   ├── dance.sh         # 跳舞弹幕主题
+│   │   ├── fireworks.sh     # 烟花弹幕主题
+│   │   ├── rocket.sh        # 火箭弹幕主题
+│   │   ├── trophy.sh        # 奖杯弹幕主题
+│   │   └── wave.sh          # 海浪弹幕主题
+│   ├── lib/
+│   │   ├── animation.sh     # 共享弹幕引擎
+│   │   ├── policy.sh        # 等级/情绪选择逻辑
+│   │   ├── render.sh        # 消息选择与输出
+│   │   └── state.sh         # 统计、历史、里程碑
+│   ├── messages/
+│   │   ├── catalog_en.tsv   # 英文消息目录
+│   │   ├── catalog_zh.tsv   # 中文消息目录
+│   │   ├── catalog_ja.tsv   # 日文消息目录
+│   │   ├── catalog_ko.tsv   # 韩文消息目录
+│   │   └── catalog_es.tsv   # 西班牙文消息目录
 │   └── voices/
 │       ├── cheer_zh.sh      # 中文鼓励
 │       ├── cheer_en.sh      # 英文鼓励
-│       └── cheer_ja.sh      # 日文鼓励
+│       ├── cheer_ja.sh      # 日文鼓励
+│       ├── cheer_ko.sh      # 韩文鼓励
+│       └── cheer_es.sh      # 西班牙文鼓励
+├── tests/
+│   ├── run.sh               # 测试运行器
+│   ├── fixtures/            # JSON Hook 事件测试数据
+│   ├── integration_test.sh
+│   ├── policy_test.sh
+│   ├── render_test.sh
+│   └── state_test.sh
 ├── README.md
 ├── README.en.md
 ├── README.zh.md
@@ -247,8 +275,8 @@ cheerer/
 
 ### 添加新动画
 
-1. 在 `scripts/animations/` 创建新的 `.sh` 文件
-2. 在 `scripts/lib/policy.sh` 的 `policy_pick_animation` 候选列表里加入该动画名称
+1. 在 `scripts/animations/` 创建新的 `.sh` 文件 —— 设置 `DANMAKU_*` 数组然后调用 `anim_danmaku_run`
+2. 动画会在运行时自动发现（无需注册）
 3. 运行 `bash scripts/cheer.sh` 或 `CHEERER_ANIM=<name> bash scripts/cheer.sh` 验证脚本可正常执行
 
 ### 添加新语言

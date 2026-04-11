@@ -6,21 +6,21 @@
 
 **Language:** English | [中文](README.zh.md) | [日本語](README.ja.md)
 
-Whenever Claude Code finishes a task, cheerer plays a pixel-style terminal animation and a multilingual voice encouragement to make coding more fun.
+Whenever Claude Code finishes a task, cheerer plays a danmaku (bullet-screen) floating-subtitle animation and a multilingual voice encouragement to make coding more fun.
 
 ## ✨ Features
 
-- 🏀 Basketball, dance, and fireworks terminal animations
-- 🔊 Multilingual voice encouragement (Chinese / English / Japanese)
+- 🏀 Six danmaku animations: basketball, dance, fireworks, rocket, trophy, wave
+- 🔊 Multilingual voice encouragement (Chinese / English / Japanese / Korean / Spanish)
 - 🎲 Random animation selection, or force a specific animation
-- 🚀 Epic mode that plays all three animations in sequence
+- 🚀 Epic mode that plays all six animations in sequence
 - 📊 Trigger stats and milestone celebrations (`--stats`, milestone fireworks)
 - 📝 Optional custom message pool loaded from `custom-messages.txt`
 - 🖥️ Automatic dumb-terminal fallback and session-scoped cooldown handling
 
 ## 🎬 Demo Preview
 
-After Claude Code finishes a task, your terminal instantly plays a short pixel animation and a matching voice encouragement. This is a text placeholder for now — a GIF demo will be added later.
+After Claude Code finishes a task, your terminal instantly plays a short danmaku animation (floating subtitles scrolling right-to-left) and a matching voice encouragement. This is a text placeholder for now — a GIF demo will be added later.
 
 ## 📦 Installation
 
@@ -56,7 +56,7 @@ If you manage a team marketplace, add cheerer as an entry in your `marketplace.j
         "source": "github",
         "repo": "chinadbo/cheerer"
       },
-      "description": "Pixel animations + voice encouragement when tasks complete"
+      "description": "Danmaku animations + voice encouragement when tasks complete"
     }
   ]
 }
@@ -136,8 +136,8 @@ Set in your shell profile (`~/.bashrc`, `~/.zshrc`) or `.claude/settings.json`:
 | Variable | Description | Values | Default |
 |------|------|--------|---------|
 | `CHEERER_ENABLED` | Master switch | `true` / `false` | `true` |
-| `CHEERER_LANG` | Voice language | `zh` / `en` / `ja` | `zh` |
-| `CHEERER_ANIM` | Animation style | `basketball` / `dance` / `fireworks` / `epic` / `random` | `random` |
+| `CHEERER_LANG` | Voice language | `zh` / `en` / `ja` / `ko` / `es` | `zh` |
+| `CHEERER_ANIM` | Animation style | `basketball` / `dance` / `fireworks` / `rocket` / `trophy` / `wave` / `epic` / `random` | `random` |
 | `CHEERER_VOICE` | Voice output | `on` / `off` / `true` / `false` | `on` |
 | `CHEERER_DUMB` | Force text-only fallback or keep auto-detect | `auto` / `true` / `false` | `auto` |
 | `CHEERER_MODE` | Output mode | `auto` / `full` / `text` | `auto` |
@@ -155,7 +155,7 @@ Set in your shell profile (`~/.bashrc`, `~/.zshrc`) or `.claude/settings.json`:
 - `CHEERER_MODE=auto` plays animation on `TaskCompleted`, and keeps `Stop` hooks text-only unless `CHEERER_INTENSITY=high`.
 - `CHEERER_MODE=full` always plays animation.
 - `CHEERER_MODE=text` always skips animation and prints only the encouragement text/voice.
-- `CHEERER_ANIM=epic`, `CHEERER_EPIC=true`, or a task duration at or above `CHEERER_EPIC_THRESHOLD` plays all three animations in sequence.
+- `CHEERER_ANIM=epic`, `CHEERER_EPIC=true`, or a task duration at or above `CHEERER_EPIC_THRESHOLD` plays all six animations in sequence.
 - `CHEERER_COOLDOWN` has an effective minimum of 1 second, even if you set `0`.
 - Cooldown suppresses animation only; text/voice output still runs.
 - `CHEERER_DUMB=auto` is the default; cheerer also auto-detects dumb terminals and empty `TERM` values.
@@ -180,12 +180,16 @@ CHEERER_DUMB=true bash scripts/cheer.sh
 # Wrapper command
 bash bin/cheer --epic
 bash bin/cheer --stats
+bash bin/cheer --preview
+bash bin/cheer --list
 ```
 
-`bin/cheer` currently supports exactly two flags:
+`bin/cheer` supports four flags:
 
-- `--epic` — force epic mode (basketball + dance + fireworks)
+- `--epic` — force epic mode (plays all six animations in sequence)
 - `--stats` — print total triggers, milestones reached, and last trigger time
+- `--preview [name]` — play an animation without a hook trigger; `name` is optional (random if omitted)
+- `--list` — list all available animations and languages
 
 ## Testing
 
@@ -213,7 +217,7 @@ Milestones currently trigger at 10, 25, 50, 100, 250, 500, and 1000 total runs. 
 
 - **Pure Shell implementation** with zero runtime dependencies
 - **ANSI escape codes** for colors and cursor movement
-- **Frame animation** rendered in place with cursor rewind (`\033[11A`)
+- **Danmaku engine** — floating subtitles scroll right-to-left at configurable rows, speeds, and delays
 - **Voice fallback**: macOS `say` → `espeak` → plain text
 - **Animation duration**: around 2–3 seconds, designed not to interrupt your workflow
 - **Terminal compatibility**: automatically detects dumb terminals and falls back gracefully
@@ -225,27 +229,35 @@ cheerer/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest
 ├── bin/
-│   └── cheer                # Wrapper command (--epic, --stats)
+│   └── cheer                # Wrapper command (--epic, --stats, --preview, --list)
 ├── hooks/
 │   └── hooks.json           # Hook configuration
 ├── scripts/
 │   ├── cheer.sh             # Main entry point (hooks + routing + stats)
 │   ├── animations/
-│   │   ├── basketball.sh    # Basketball animation
-│   │   ├── dance.sh         # Dancing animation
-│   │   └── fireworks.sh     # Fireworks animation
+│   │   ├── basketball.sh    # Basketball danmaku theme
+│   │   ├── dance.sh         # Dance danmaku theme
+│   │   ├── fireworks.sh     # Fireworks danmaku theme
+│   │   ├── rocket.sh        # Rocket danmaku theme
+│   │   ├── trophy.sh        # Trophy danmaku theme
+│   │   └── wave.sh          # Wave danmaku theme
 │   ├── lib/
+│   │   ├── animation.sh     # Shared danmaku engine
 │   │   ├── policy.sh        # Tier/mood selection logic
 │   │   ├── render.sh        # Message selection and output
 │   │   └── state.sh         # Stats, history, milestones
 │   ├── messages/
 │   │   ├── catalog_en.tsv   # English message catalog
 │   │   ├── catalog_zh.tsv   # Chinese message catalog
-│   │   └── catalog_ja.tsv   # Japanese message catalog
+│   │   ├── catalog_ja.tsv   # Japanese message catalog
+│   │   ├── catalog_ko.tsv   # Korean message catalog
+│   │   └── catalog_es.tsv   # Spanish message catalog
 │   └── voices/
 │       ├── cheer_zh.sh      # Chinese encouragement
 │       ├── cheer_en.sh      # English encouragement
-│       └── cheer_ja.sh      # Japanese encouragement
+│       ├── cheer_ja.sh      # Japanese encouragement
+│       ├── cheer_ko.sh      # Korean encouragement
+│       └── cheer_es.sh      # Spanish encouragement
 ├── tests/
 │   ├── run.sh               # Test runner
 │   ├── fixtures/            # JSON hook event fixtures
@@ -263,8 +275,8 @@ cheerer/
 
 ### Add a new animation
 
-1. Create a new `.sh` file in `scripts/animations/`
-2. Add the animation name to the candidate list in `policy_pick_animation` in `scripts/lib/policy.sh`
+1. Create a new `.sh` file in `scripts/animations/` — set `DANMAKU_*` arrays then call `anim_danmaku_run`
+2. The animation is auto-discovered at runtime (no registration needed)
 3. Run `bash scripts/cheer.sh` or `CHEERER_ANIM=<name> bash scripts/cheer.sh` to verify it works
 
 ### Add a new language
