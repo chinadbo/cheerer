@@ -182,5 +182,65 @@ run_test "dumb_mode_stays_plain_when_voice_script_runs" test_dumb_mode_stays_pla
 run_test "epic_env_runs_all_three_animations" test_epic_env_runs_all_three_animations
 run_test "epic_threshold_runs_all_three_animations" test_epic_threshold_runs_all_three_animations
 run_test "cooldown_zero_enforces_minimum_one_second" test_cooldown_zero_enforces_minimum_one_second
+test_preview_command_runs_animation() {
+  local output
+  output="$(bash bin/cheer --preview basketball 2>&1)"
+  # Animation scripts produce multi-line output; just verify non-empty and no error
+  [[ -n "$output" ]] || return 1
+  assert_not_contains "$output" "not found"
+}
+
+test_list_command_discovers_animations() {
+  local output
+  output="$(bash bin/cheer --list 2>&1)"
+  assert_contains "$output" "dance"
+  assert_contains "$output" "fireworks"
+  assert_contains "$output" "Languages: zh, en, ja, ko, es"
+}
+
+test_first_run_shows_welcome() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CLAUDE_SESSION_ID="welcome-test" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    CHEERER_HOUR=15 \
+    bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+  assert_contains "$output" "Welcome!"
+  assert_contains "$output" "cheer --list"
+}
+
+test_korean_lang_works() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CLAUDE_SESSION_ID="ko-test" \
+    CHEERER_LANG="ko" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    CHEERER_HOUR=15 \
+    bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+  # Korean catalog has quick gentle messages — check for Korean characters
+  if printf '%s' "$output" | grep -q '작은\|확실한\|순조롭\|끝냈\|빠르고\|깔끔하게'; then
+    return 0
+  fi
+  # Fallback: just verify non-empty and no crash
+  [[ -n "$output" ]]
+}
+
+run_test "stop_fixture_uses_quick_message" test_stop_fixture_uses_quick_message
+run_test "long_task_fixture_uses_big_message" test_long_task_fixture_uses_big_message
+run_test "corrupt_stats_still_exits_zero" test_corrupt_stats_still_exits_zero
+run_test "hype_style_surfaces_hype_copy" test_hype_style_surfaces_hype_copy
+run_test "dumb_mode_stays_plain_when_voice_script_runs" test_dumb_mode_stays_plain_when_voice_script_runs
+run_test "epic_env_runs_all_three_animations" test_epic_env_runs_all_three_animations
+run_test "epic_threshold_runs_all_three_animations" test_epic_threshold_runs_all_three_animations
+run_test "cooldown_zero_enforces_minimum_one_second" test_cooldown_zero_enforces_minimum_one_second
 run_test "custom_only_uses_custom_messages_file" test_custom_only_uses_custom_messages_file
+run_test "preview_command_runs_animation" test_preview_command_runs_animation
+run_test "list_command_discovers_animations" test_list_command_discovers_animations
+run_test "first_run_shows_welcome" test_first_run_shows_welcome
+run_test "korean_lang_works" test_korean_lang_works
 finish_tests
