@@ -326,4 +326,53 @@ test_cooldown_does_not_reset_timer() {
 }
 
 run_test "cooldown_does_not_reset_timer" test_cooldown_does_not_reset_timer
+
+test_anim_display_width_ascii() {
+  . scripts/lib/animation.sh
+  local w
+  w="$(anim_display_width "abc")"
+  assert_eq "3" "$w"
+}
+
+test_anim_display_width_cjk() {
+  . scripts/lib/animation.sh
+  local w
+  w="$(anim_display_width "中")"
+  assert_eq "2" "$w"
+}
+
+test_anim_display_width_latin_extended() {
+  . scripts/lib/animation.sh
+  local w
+  w="$(anim_display_width "é")"
+  assert_eq "1" "$w"
+}
+
+test_anim_display_width_emoji() {
+  . scripts/lib/animation.sh
+  local w
+  w="$(anim_display_width "🎉")"
+  assert_eq "2" "$w"
+}
+
+test_anim_display_width_mixed() {
+  . scripts/lib/animation.sh
+  local w
+  w="$(anim_display_width "España")"
+  assert_eq "6" "$w"
+}
+
+test_anim_display_width_korean() {
+  . scripts/lib/animation.sh
+  local w
+  w="$(anim_display_width "한글")"
+  assert_eq "4" "$w"
+}
+
+run_test "anim_display_width_ascii" test_anim_display_width_ascii
+run_test "anim_display_width_cjk" test_anim_display_width_cjk
+run_test "anim_display_width_latin_extended" test_anim_display_width_latin_extended
+run_test "anim_display_width_emoji" test_anim_display_width_emoji
+run_test "anim_display_width_mixed" test_anim_display_width_mixed
+run_test "anim_display_width_korean" test_anim_display_width_korean
 finish_tests

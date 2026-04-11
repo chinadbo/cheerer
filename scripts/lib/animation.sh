@@ -15,15 +15,20 @@ anim_term_width() {
 # Approximate display width: ASCII = 1 col, non-ASCII (emoji, CJK) = 2 cols.
 # Handles the common emoji/CJK case; combining characters not fully supported.
 anim_display_width() {
-  local text="$1"
-  local width=0 i char
-  for ((i=0; i<${#text}; i++)); do
-    char="${text:$i:1}"
-    if [[ "$char" =~ [[:ascii:]] ]]; then
-      ((width++))
+  local text="$1" width=0 i=0 char_len
+  while ((i < ${#text})); do
+    char_len=$(LC_ALL=C printf '%s' "${text:$i:1}" | wc -c)
+    char_len="${char_len##* }"
+    if ((char_len == 1)); then
+      ((width++))    # ASCII = 1 column
+    elif ((char_len == 2)); then
+      ((width++))    # 2-byte UTF-8 (Latin extended: é ñ ü) = 1 column
+    elif ((char_len == 3)); then
+      ((width+=2))   # 3-byte UTF-8 (CJK, Hangul) = 2 columns
     else
-      ((width+=2))
+      ((width+=2))   # 4-byte UTF-8 (emoji) = 2 columns
     fi
+    ((i++))
   done
   printf '%d' "$width"
 }
