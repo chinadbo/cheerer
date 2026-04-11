@@ -1,117 +1,23 @@
 #!/bin/bash
-# fireworks.sh — 烟花绽放像素动画
-# 5帧主体（发射→上升→爆炸初始→全开→消散），总时长约 2.4 秒
-# 画布：10行 × 22字符（含边框）
+# fireworks.sh — Fireworks danmaku theme
+# Sparkles and bursts float across the terminal
 
-RESET="\033[0m"
-RED="\033[31m"
-YELLOW="\033[38;5;226m"
-GREEN="\033[32m"
-CYAN="\033[96m"
-MAGENTA="\033[35m"
-WHITE="\033[97m"
-BLUE="\033[34m"
-BOLD="\033[1m"
-GRAY="\033[90m"
+ANIM_LIB="$(dirname "${BASH_SOURCE[0]}")/../lib/animation.sh"
+if [[ ! -f "$ANIM_LIB" ]]; then
+  printf '🎉 %s\n' "${CHEERER_MESSAGE:-Great work!}"
+  exit 0
+fi
+. "$ANIM_LIB"
 
-# 隐藏光标，退出时恢复
-tput civis 2>/dev/null || true
-trap 'tput cnorm 2>/dev/null || true' EXIT
+MSG="${CHEERER_MESSAGE:-Great work!}"
 
-DELAY=0.22
-FRAME_LINES=10
+DANMAKU_ROWS=6
+DANMAKU_TICK=0.07
+DANMAKU_FRAMES=30
+DANMAKU_ROW=(   1               2                    3           4                       5                  6              )
+DANMAKU_TEXT=(  "✦ ✧ ✦ ✧ ✦"    "✧ 💥 Amazing! 💥 ✧" "🎆 $MSG" "✦ ✧ Brilliant! ✧ ✦"   "🎆 🎇 🎆 🎇"       "✧ ✦ ✧ ✦ ✧"   )
+DANMAKU_COLOR=($'\033[33m'      $'\033[31m'          $'\033[1;33m' $'\033[35m'           $'\033[97m'        $'\033[33m'     )
+DANMAKU_SPEED=(3                4                    2            3                       2                   5               )
+DANMAKU_DELAY=(0                5                    2            8                       12                  3               )
 
-# ── 帧1：发射阶段 ──────────────────────────────────────
-draw_frame1() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║        |         ║${RESET}\n" \
-"${RED}${BOLD}  ║        *         ║${RESET}\n" \
-"${YELLOW}  ║        |         ║${RESET}\n" \
-"${YELLOW}  ║        |         ║${RESET}\n" \
-"${GRAY}  ║        .         ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-# ── 帧2：上升阶段 ──────────────────────────────────────
-draw_frame2() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${RED}${BOLD}  ║        *         ║${RESET}\n" \
-"${YELLOW}  ║        |         ║${RESET}\n" \
-"${YELLOW}  ║        |         ║${RESET}\n" \
-"${GRAY}  ║        .         ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-# ── 帧3：爆炸初始（8方向射线） ─────────────────────────
-draw_frame3() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${YELLOW}${BOLD}  ║      \\ | /       ║${RESET}\n" \
-"${RED}${BOLD}  ║     - ★ -        ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      / | \\       ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-# ── 帧4：全开！多色绽放 ────────────────────────────────
-draw_frame4() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${CYAN}  ║  *   \\ ✦ /   *   ║${RESET}\n" \
-"${MAGENTA}  ║   \\   \\|/   /    ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║ * - -★★★- - *   ║${RESET}\n" \
-"${GREEN}  ║   /   /|\\   \\    ║${RESET}\n" \
-"${RED}  ║  *   / ✦ \\   *   ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${WHITE}${BOLD}  ║  🎆 AWESOME! 🎆  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-# ── 帧5：消散阶段（余烬飘落） ──────────────────────────
-draw_frame5() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${YELLOW}  ║    .    *    .   ║${RESET}\n" \
-"${RED}  ║  .    .   .    . ║${RESET}\n" \
-"${CYAN}  ║    .   ✦   .     ║${RESET}\n" \
-"${GREEN}  ║  .   .   .   .   ║${RESET}\n" \
-"${MAGENTA}  ║    .       .     ║${RESET}\n" \
-"${BLUE}  ║  .   .   .   .   ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-# ── 播放动画 ──────────────────────────────────────────
-draw_frame1
-
-# 播放序列：2→3→4→5→4（5帧，总时长约 1.1s + 0.6s 停留 = 1.7s）
-for frame_fn in draw_frame2 draw_frame3 draw_frame4 draw_frame5 draw_frame4; do
-  printf "\033[${FRAME_LINES}A\033[0G"
-  "$frame_fn"
-  sleep "$DELAY"
-done
-
-# 最后停留 0.6 秒展示全开帧
-sleep 0.6
-
-# 清除动画区域，不留残影
-printf "\033[${FRAME_LINES}A\033[0G"
-for ((i=0; i<FRAME_LINES; i++)); do
-  printf "\033[2K\n"
-done
-printf "\033[${FRAME_LINES}A\033[0G"
+anim_danmaku_run

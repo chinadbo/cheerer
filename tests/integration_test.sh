@@ -222,6 +222,36 @@ test_korean_lang_works() {
   [[ -n "$output" ]]
 }
 
+test_danmaku_animation_exits_cleanly() {
+  CHEERER_MESSAGE="Test message" bash scripts/animations/dance.sh >/dev/null 2>&1
+}
+
+test_danmaku_animation_contains_message() {
+  local output
+  output="$(CHEERER_MESSAGE="UniqueTest123" bash scripts/animations/dance.sh 2>&1 | strings)"
+  assert_contains "$output" "UniqueTest123"
+}
+
+test_danmaku_library_graceful_fallback() {
+  # If animation lib is missing, animation should still print the message
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/anims"
+  cat > "$tmp_dir/anims/test.sh" << 'ANIMEOF'
+#!/bin/bash
+ANIM_LIB="/nonexistent/path/animation.sh"
+if [[ ! -f "$ANIM_LIB" ]]; then
+  printf '🎉 %s\n' "${CHEERER_MESSAGE:-Great work!}"
+  exit 0
+fi
+. "$ANIM_LIB"
+ANIMEOF
+  chmod +x "$tmp_dir/anims/test.sh"
+  output="$(CHEERER_MESSAGE="Fallback works" bash "$tmp_dir/anims/test.sh")"
+  assert_contains "$output" "Fallback works"
+  rm -rf "$tmp_dir"
+}
+
 run_test "stop_fixture_uses_quick_message" test_stop_fixture_uses_quick_message
 run_test "long_task_fixture_uses_big_message" test_long_task_fixture_uses_big_message
 run_test "corrupt_stats_still_exits_zero" test_corrupt_stats_still_exits_zero
@@ -235,4 +265,7 @@ run_test "preview_command_runs_animation" test_preview_command_runs_animation
 run_test "list_command_discovers_animations" test_list_command_discovers_animations
 run_test "first_run_shows_welcome" test_first_run_shows_welcome
 run_test "korean_lang_works" test_korean_lang_works
+run_test "danmaku_animation_exits_cleanly" test_danmaku_animation_exits_cleanly
+run_test "danmaku_animation_contains_message" test_danmaku_animation_contains_message
+run_test "danmaku_library_graceful_fallback" test_danmaku_library_graceful_fallback
 finish_tests

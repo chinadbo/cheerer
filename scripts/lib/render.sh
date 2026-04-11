@@ -115,6 +115,10 @@ render_emit() {
     fi
   fi
 
+  # Export message BEFORE animation so danmaku can use it
+  export CHEERER_MESSAGE="$RENDER_MESSAGE_TEXT"
+  export CHEERER_MESSAGE_ID="$RENDER_MESSAGE_ID"
+
   if [[ "$RENDER_ANIMATE" == "true" ]] && [[ "$IN_COOLDOWN" == "false" ]]; then
     if [[ "${CHEERER_ANIM:-random}" == "epic" ]]; then
       for anim_file in "$ANIM_DIR"/*.sh; do
@@ -126,8 +130,6 @@ render_emit() {
     fi
   fi
 
-  export CHEERER_MESSAGE="$RENDER_MESSAGE_TEXT"
-  export CHEERER_MESSAGE_ID="$RENDER_MESSAGE_ID"
   export CHEERER_DUMB="${CHEERER_DUMB:-false}"
   export CHEERER_VOICE="${CHEERER_VOICE:-on}"
 

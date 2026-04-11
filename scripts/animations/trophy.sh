@@ -1,106 +1,23 @@
 #!/bin/bash
-# trophy.sh — Trophy celebration pixel animation
-# 5 frames: spotlight → trophy slides in → shine → sparkles → celebration
-# Canvas: 10 rows × 22 chars (with border)
+# trophy.sh — Trophy danmaku theme
+# Championship-themed encouragement floats across the terminal
 
-RESET="\033[0m"
-YELLOW="\033[38;5;226m"
-WHITE="\033[97m"
-CYAN="\033[96m"
-GRAY="\033[90m"
-BOLD="\033[1m"
-MAGENTA="\033[35m"
+ANIM_LIB="$(dirname "${BASH_SOURCE[0]}")/../lib/animation.sh"
+if [[ ! -f "$ANIM_LIB" ]]; then
+  printf '🎉 %s\n' "${CHEERER_MESSAGE:-Great work!}"
+  exit 0
+fi
+. "$ANIM_LIB"
 
-tput civis 2>/dev/null || true
-trap 'tput cnorm 2>/dev/null || true' EXIT
+MSG="${CHEERER_MESSAGE:-Great work!}"
 
-DELAY=0.22
-FRAME_LINES=10
+DANMAKU_ROWS=6
+DANMAKU_TICK=0.07
+DANMAKU_FRAMES=30
+DANMAKU_ROW=(   1                  2                  3           4                       5                6                  )
+DANMAKU_TEXT=(  "🏆 ★ 🏆 ★ 🏆"   "✨ Champion! ✨"  "🏆 $MSG"  "★ 🏆 Winner! 🏆 ★"   "✦ ✧ ✦ ✧ ✦"    "🏆 ★ Gold! ★ 🏆" )
+DANMAKU_COLOR=($'\033[33m'        $'\033[97m'        $'\033[1;33m' $'\033[35m'            $'\033[96m'      $'\033[33m'        )
+DANMAKU_SPEED=(3                  2                  2            3                       4                3                  )
+DANMAKU_DELAY=(0                  5                  2            8                       12               3                  )
 
-draw_frame1() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${WHITE}  ║       |          ║${RESET}\n" \
-"${WHITE}  ║      / \\         ║${RESET}\n" \
-"${WHITE}  ║     /   \\        ║${RESET}\n" \
-"${WHITE}  ║    /spotlight\\   ║${RESET}\n" \
-"${WHITE}  ║   /_________ \\   ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-draw_frame2() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ╔═══╗      ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ║ 1st║      ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ╚═╤═╝      ║${RESET}\n" \
-"${YELLOW}  ║       ──┘        ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-draw_frame3() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${WHITE}  ║     ✦            ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ╔═══╗      ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║   ✦  ║1ST║  ✦   ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ╚═╤═╝      ║${RESET}\n" \
-"${YELLOW}  ║       ──┘   ✦   ║${RESET}\n" \
-"${WHITE}  ║  ✦          ✦    ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-draw_frame4() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${CYAN}  ║  ✦    ✦   ✦  ✦   ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ╔═══╗      ║${RESET}\n" \
-"${WHITE}${BOLD}  ║   ✦  ║1ST║  ✦   ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║      ╚═╤═╝      ║${RESET}\n" \
-"${CYAN}  ║  ✦    ──┘    ✦   ║${RESET}\n" \
-"${CYAN}  ║    ✦     ✦      ║${RESET}\n" \
-"${WHITE}  ║  ✦           ✦   ║${RESET}\n" \
-"${GRAY}  ║                  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-draw_frame5() {
-printf "%b" \
-"${GRAY}  ╔══════════════════╗${RESET}\n" \
-"${CYAN}  ║ ✦  ✦  ✦  ✦  ✦   ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║    ╔═══════╗     ║${RESET}\n" \
-"${WHITE}${BOLD}  ║ ✦  ║ 🏆1ST║ ✦   ║${RESET}\n" \
-"${YELLOW}${BOLD}  ║    ╚═══╤═══╝    ║${RESET}\n" \
-"${MAGENTA}${BOLD}  ║   🎉 CHAMPION 🎉║${RESET}\n" \
-"${CYAN}  ║ ✦  ──┘  ✦  ✦   ║${RESET}\n" \
-"${CYAN}  ║  ✦    ✦    ✦    ║${RESET}\n" \
-"${CYAN}  ║ ✦  ✦  ✦  ✦  ✦  ║${RESET}\n" \
-"${GRAY}  ╚══════════════════╝${RESET}\n"
-}
-
-# Play animation
-draw_frame1
-
-for frame_fn in draw_frame2 draw_frame3 draw_frame4 draw_frame5; do
-  printf "\033[${FRAME_LINES}A\033[0G"
-  "$frame_fn"
-  sleep "$DELAY"
-done
-
-sleep 0.7
-
-# Clean up
-printf "\033[${FRAME_LINES}A\033[0G"
-for ((i=0; i<FRAME_LINES; i++)); do
-  printf "\033[2K\n"
-done
-printf "\033[${FRAME_LINES}A\033[0G"
+anim_danmaku_run
