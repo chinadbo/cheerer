@@ -3,19 +3,48 @@
 # Each animation theme sets DANMAKU_* arrays then calls anim_danmaku_run.
 # Streams scroll right-to-left at configurable rows, speeds, and delays.
 # The main message (CHEERER_MESSAGE) floats as the prominent center stream.
+#
+# Required: must be sourced into a fresh subprocess (bash "$theme.sh"),
+# never sourced into a long-lived shell. Each theme invocation via
+# render.sh provides process isolation.
 
 anim_term_width() {
   tput cols 2>/dev/null || echo 80
 }
 
+# Approximate display width: ASCII = 1 col, non-ASCII (emoji, CJK) = 2 cols.
+# Handles the common emoji/CJK case; combining characters not fully supported.
+anim_display_width() {
+  local text="$1"
+  local width=0 i char
+  for ((i=0; i<${#text}; i++)); do
+    char="${text:$i:1}"
+    if [[ "$char" =~ [[:ascii:]] ]]; then
+      ((width++))
+    else
+      ((width+=2))
+    fi
+  done
+  printf '%d' "$width"
+}
+
+# Sanitize user-supplied message: strip control chars (ESC, newlines, etc.)
+anim_sanitize_msg() {
+  local raw="$1"
+  # Remove C0 control chars (0x01-0x1F) including ESC, newline, CR
+  printf '%s' "$raw" | tr -d '\001-\037'
+}
+
 # Draw one frame of the danmaku animation.
 # Reads DANMAKU_* arrays and _ANIM_FRAME counter.
+# NOTE: only one stream is rendered per row per frame (rightmost visible wins).
+# Assign distinct rows to streams to avoid invisible streams.
 anim_danmaku_draw() {
-  local i row pos text color text_len start_frame
+  local i row pos text color disp_len start_frame
   local n="${#DANMAKU_ROW[@]}"
 
   # Move cursor to top of animation area
-  printf '\033[%sA\033[0G' "$DANMAKU_ROWS"
+  printf '\033[%sA\033[1G' "$DANMAKU_ROWS"
 
   for ((row=1; row<=DANMAKU_ROWS; row++)); do
     printf '\033[2K'
@@ -28,9 +57,9 @@ anim_danmaku_draw() {
       [[ "$_ANIM_FRAME" -ge "$start_frame" ]] || continue
 
       pos=$(( ANIM_TERM_WIDTH - (_ANIM_FRAME - start_frame) * ${DANMAKU_SPEED[$i]:-2} ))
-      text_len="${#DANMAKU_TEXT[$i]}"
+      disp_len="$(anim_display_width "${DANMAKU_TEXT[$i]}")"
 
-      [[ $((pos + text_len)) -ge 1 ]] || continue
+      [[ $((pos + disp_len)) -ge 1 ]] || continue
       [[ "$pos" -le "$ANIM_TERM_WIDTH" ]] || continue
 
       if [[ "$pos" -gt "$best_pos" ]]; then
@@ -42,12 +71,12 @@ anim_danmaku_draw() {
     if [[ "$best_idx" -ge 0 ]]; then
       text="${DANMAKU_TEXT[$best_idx]}"
       color="${DANMAKU_COLOR[$best_idx]}"
-      text_len="${#text}"
+      disp_len="$(anim_display_width "$text")"
 
       local _RESET=$'\033[0m'
       if [[ "$best_pos" -ge 1 ]]; then
         printf '%*s%s%s%s' "$((best_pos - 1))" "" "$color" "$text" "$_RESET"
-      elif [[ $((best_pos + text_len)) -ge 1 ]]; then
+      elif [[ $((best_pos + disp_len)) -ge 1 ]]; then
         local clip=$((1 - best_pos))
         printf '%s%s%s' "$color" "${text:$clip}" "$_RESET"
       fi
@@ -57,14 +86,16 @@ anim_danmaku_draw() {
   done
 }
 
-# Cleanup: clear animation area, restore cursor
+# Cleanup: clear animation area, restore cursor and terminal attributes
 anim_cleanup() {
-  printf '\033[%sA\033[0G' "$DANMAKU_ROWS"
+  printf '\033[0m'  # reset all attributes unconditionally
+  local rows="${DANMAKU_ROWS:-6}"
+  printf '\033[%sA\033[1G' "$rows"
   local _i
-  for ((_i=1; _i<=DANMAKU_ROWS; _i++)); do
+  for ((_i=1; _i<=rows; _i++)); do
     printf '\033[2K\n'
   done
-  printf '\033[%sA\033[0G' "$DANMAKU_ROWS"
+  printf '\033[%sA\033[1G' "$rows"
   tput cnorm 2>/dev/null || true
 }
 
@@ -80,14 +111,14 @@ anim_cleanup() {
 #   DANMAKU_DELAY[i]— frames to wait before stream appears
 anim_danmaku_run() {
   local tick="${DANMAKU_TICK:-0.07}"
-  local total="${DANMAKU_FRAMES:-28}"
+  local total="${DANMAKU_FRAMES:-30}"
   _ANIM_FRAME=0
 
   ANIM_TERM_WIDTH="$(anim_term_width)"
   DANMAKU_ROWS="${DANMAKU_ROWS:-6}"
 
   tput civis 2>/dev/null || true
-  trap 'anim_cleanup' EXIT
+  trap 'anim_cleanup' EXIT INT TERM
 
   # Create animation area (blank rows)
   local _i
@@ -100,4 +131,8 @@ anim_danmaku_run() {
     sleep "$tick"
     _ANIM_FRAME=$((_ANIM_FRAME + 1))
   done
+
+  # Explicit cleanup on normal completion, then clear the trap
+  anim_cleanup
+  trap - EXIT INT TERM
 }

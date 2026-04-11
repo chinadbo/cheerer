@@ -223,32 +223,44 @@ test_korean_lang_works() {
 }
 
 test_danmaku_animation_exits_cleanly() {
-  CHEERER_MESSAGE="Test message" bash scripts/animations/dance.sh >/dev/null 2>&1
+  local theme
+  for theme in dance fireworks basketball rocket trophy wave; do
+    CHEERER_MESSAGE="Test message" bash "scripts/animations/${theme}.sh" >/dev/null 2>&1 \
+      || return 1
+  done
 }
 
 test_danmaku_animation_contains_message() {
   local output
-  output="$(CHEERER_MESSAGE="UniqueTest123" bash scripts/animations/dance.sh 2>&1 | strings)"
+  output="$(CHEERER_MESSAGE="UniqueTest123" bash scripts/animations/dance.sh 2>&1)"
+  # Use raw output — grep -F finds ASCII needles even among ANSI/emoji bytes
   assert_contains "$output" "UniqueTest123"
 }
 
+test_danmaku_message_sanitizes_control_chars() {
+  local output
+  output="$(CHEERER_MESSAGE=$'Has\x1b[2JEscape' bash scripts/animations/dance.sh 2>&1)"
+  # The raw ESC[2J byte sequence must not appear — sanitization strips the ESC byte
+  if printf '%s' "$output" | grep -q $'\x1b\[2J'; then
+    printf 'did not expect to find raw ESC[2J in output\n'
+    return 1
+  fi
+  # "Has" and "Escape" survive sanitization (only C0 control chars are stripped)
+  assert_contains "$output" "Has"
+  assert_contains "$output" "Escape"
+}
+
+test_danmaku_narrow_terminal_exits_cleanly() {
+  COLUMNS=10 CHEERER_MESSAGE="Test" bash scripts/animations/dance.sh >/dev/null 2>&1
+}
+
 test_danmaku_library_graceful_fallback() {
-  # If animation lib is missing, animation should still print the message
+  # Test real theme file in a location where ../lib/animation.sh doesn't exist
   local tmp_dir output
   tmp_dir="$(make_tmp_dir)"
-  mkdir -p "$tmp_dir/anims"
-  cat > "$tmp_dir/anims/test.sh" << 'ANIMEOF'
-#!/bin/bash
-ANIM_LIB="/nonexistent/path/animation.sh"
-if [[ ! -f "$ANIM_LIB" ]]; then
-  printf '🎉 %s\n' "${CHEERER_MESSAGE:-Great work!}"
-  exit 0
-fi
-. "$ANIM_LIB"
-ANIMEOF
-  chmod +x "$tmp_dir/anims/test.sh"
-  output="$(CHEERER_MESSAGE="Fallback works" bash "$tmp_dir/anims/test.sh")"
-  assert_contains "$output" "Fallback works"
+  cp scripts/animations/dance.sh "$tmp_dir/dance.sh"
+  output="$(CHEERER_MESSAGE="FallbackCheck" bash "$tmp_dir/dance.sh" 2>&1)"
+  assert_contains "$output" "FallbackCheck"
   rm -rf "$tmp_dir"
 }
 
@@ -267,5 +279,7 @@ run_test "first_run_shows_welcome" test_first_run_shows_welcome
 run_test "korean_lang_works" test_korean_lang_works
 run_test "danmaku_animation_exits_cleanly" test_danmaku_animation_exits_cleanly
 run_test "danmaku_animation_contains_message" test_danmaku_animation_contains_message
+run_test "danmaku_message_sanitizes_control_chars" test_danmaku_message_sanitizes_control_chars
+run_test "danmaku_narrow_terminal_exits_cleanly" test_danmaku_narrow_terminal_exits_cleanly
 run_test "danmaku_library_graceful_fallback" test_danmaku_library_graceful_fallback
 finish_tests

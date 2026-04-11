@@ -9,7 +9,7 @@ if [[ ! -f "$ANIM_LIB" ]]; then
 fi
 . "$ANIM_LIB"
 
-MSG="${CHEERER_MESSAGE:-Great work!}"
+MSG="$(anim_sanitize_msg "${CHEERER_MESSAGE:-Great work!}")"
 
 DANMAKU_ROWS=6
 DANMAKU_TICK=0.07

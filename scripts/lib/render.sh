@@ -125,7 +125,7 @@ render_emit() {
         [[ -f "$anim_file" ]] || continue
         bash "$anim_file"
       done
-    elif [[ -f "$ANIM_DIR/$POLICY_ANIMATION.sh" ]]; then
+    elif [[ "$POLICY_ANIMATION" =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -f "$ANIM_DIR/$POLICY_ANIMATION.sh" ]]; then
       bash "$ANIM_DIR/$POLICY_ANIMATION.sh"
     fi
   fi
