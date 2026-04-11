@@ -2,7 +2,7 @@
 
 _policy_apply_time_of_day() {
   local hour="${CHEERER_HOUR:-$(date +%H 2>/dev/null || echo 12)}"
-  hour="${hour#0}"
+  hour=$((10#$hour))
 
   # Morning (6-12): +1 mood energy
   if [[ "$hour" -ge 6 ]] && [[ "$hour" -lt 12 ]]; then

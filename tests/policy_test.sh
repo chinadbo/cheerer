@@ -175,4 +175,25 @@ test_late_night_overrides_to_cozy() {
 
 run_test "morning_upgrades_gentle_to_steady" test_morning_upgrades_gentle_to_steady
 run_test "late_night_overrides_to_cozy" test_late_night_overrides_to_cozy
+
+test_midnight_hour_zero_no_crash() {
+  HOOK_EVENT="Stop"
+  TASK_DURATION=5
+  RECENT_TASKCOMPLETED_COUNT=0
+  SESSION_STREAK=0
+  STATE_MILESTONE_MSG=""
+  CHEERER_STYLE="adaptive"
+  CHEERER_INTENSITY="normal"
+  RECENT_ANIMATIONS=""
+  ANIM_DIR="$PWD/scripts/animations"
+  CHEERER_HOUR=0
+
+  policy_select_celebration
+
+  # Hour 0 is late night (22-6 range), so quick tier gets cozy override
+  assert_eq "quick" "$POLICY_TIER"
+  assert_eq "cozy" "$POLICY_MOOD"
+}
+
+run_test "midnight_hour_zero_no_crash" test_midnight_hour_zero_no_crash
 finish_tests
