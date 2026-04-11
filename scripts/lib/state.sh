@@ -104,3 +104,51 @@ state_recent_values_csv() {
 
   tail -n "$limit" "$HISTORY_FILE" 2>/dev/null | cut -d'|' -f"$field_index" | paste -sd, -
 }
+
+state_compute_streak() {
+  local streak=0 max_streak=0
+  local row_ts row_hook _rest
+  local thirty_min=$(( $(date +%s 2>/dev/null || echo 0) - 1800 ))
+
+  while IFS='|' read -r row_ts row_hook _rest; do
+    [[ -n "${row_ts:-}" ]] || continue
+    [[ "$row_ts" -ge "$thirty_min" ]] || continue
+    if [[ "$row_hook" == "TaskCompleted" ]]; then
+      streak=$((streak + 1))
+      [[ "$streak" -gt "$max_streak" ]] && max_streak="$streak"
+    else
+      streak=0
+    fi
+  done < "$HISTORY_FILE"
+
+  printf '%s' "$max_streak"
+}
+
+state_daily_counts() {
+  local days="${1:-7}"
+  local i date_str count
+  local row_ts row_hook _rest
+
+  for i in $(seq $((days - 1)) -1 0); do
+    date_str="$(date -v-${i}d +%Y-%m-%d 2>/dev/null || date -d "$i days ago" +%Y-%m-%d 2>/dev/null || echo "unknown")"
+    count=0
+    while IFS='|' read -r row_ts row_hook _rest; do
+      [[ -n "${row_ts:-}" ]] || continue
+      local row_date
+      row_date="$(date -r "$row_ts" +%Y-%m-%d 2>/dev/null || date -d "@$row_ts" +%Y-%m-%d 2>/dev/null || echo "")"
+      [[ "$row_date" == "$date_str" ]] || continue
+      count=$((count + 1))
+    done < "$HISTORY_FILE"
+    printf '%s|%s\n' "$date_str" "$count"
+  done
+}
+
+state_most_used() {
+  local field_index="$1"
+  local counts="$TMPDIR/cheerer_counts_$$"
+  : > "$counts"
+
+  cut -d'|' -f"$field_index" "$HISTORY_FILE" | sort | uniq -c | sort -rn > "$counts"
+  head -1 "$counts" | awk '{print $2}'
+  rm -f "$counts"
+}

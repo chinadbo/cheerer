@@ -57,4 +57,27 @@ test_state_append_history_trims_to_fifty_rows() {
 run_test "state_init_creates_defaults" test_state_init_creates_defaults
 run_test "state_heals_corrupt_stats" test_state_heals_corrupt_stats
 run_test "state_append_history_trims_to_fifty_rows" test_state_append_history_trims_to_fifty_rows
+
+test_state_compute_streak() {
+  local tmp_dir i
+  tmp_dir="$(make_tmp_dir)"
+  CHEERER_DATA_DIR="$tmp_dir/data"
+  STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+  HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
+
+  state_init
+
+  local now
+  now=$(date +%s)
+  for i in 1 2 3; do
+    state_append_history "$((now - 100 + i * 10))" "TaskCompleted" "12" "solid" "steady" "dance" "msg$i"
+  done
+
+  local streak
+  streak="$(state_compute_streak)"
+
+  [[ "$streak" -ge 3 ]] || return 1
+}
+
+run_test "state_compute_streak" test_state_compute_streak
 finish_tests

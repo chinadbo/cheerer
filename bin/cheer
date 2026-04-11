@@ -7,23 +7,76 @@ if [[ "${1:-}" == "--epic" ]]; then
 fi
 
 if [[ "${1:-}" == "--stats" ]]; then
-  STATS_FILE="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}/stats.json"
+  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
+  STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+  HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
+
   if [[ ! -f "$STATS_FILE" ]]; then
     echo "No stats yet — complete some tasks with Claude Code!"
     exit 0
   fi
 
-  STATS_JSON=$(cat "$STATS_FILE" 2>/dev/null)
-  TOTAL_TRIGGERS=$(printf '%s' "$STATS_JSON" | grep -o '"total_triggers":[0-9]*' | cut -d: -f2)
-  LAST_TRIGGER=$(printf '%s' "$STATS_JSON" | grep -o '"last_trigger":"[^"]*"' | cut -d'"' -f4)
-  MILESTONES_RAW=$(printf '%s' "$STATS_JSON" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)
+  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  . "$SCRIPT_DIR/scripts/lib/state.sh"
 
-  [[ "$MILESTONES_RAW" == "[]" ]] && MILESTONES_RAW="none yet"
-  [[ "$MILESTONES_RAW" != "none yet" ]] && MILESTONES_RAW=$(printf '%s' "$MILESTONES_RAW" | tr -d '[]')
+  state_read_stats || state_defaults
 
-  echo "Total triggers: ${TOTAL_TRIGGERS:-0}"
-  echo "Milestones reached: $MILESTONES_RAW"
-  echo "Last trigger: ${LAST_TRIGGER:-}"
+  echo ""
+  echo "  cheerer — Your Celebration Stats"
+  echo ""
+  printf "  Total celebrations:   %s\n" "${STATS_TOTAL_TRIGGERS:-0}"
+
+  if [[ -f "$HISTORY_FILE" ]] && [[ -s "$HISTORY_FILE" ]]; then
+    streak="$(state_compute_streak)"
+    printf "  Current streak:       %s (last 30 min)\n" "$streak"
+
+    echo ""
+    echo "  Last 7 days:"
+
+    local max_count=1
+    daily_raw="$(state_daily_counts 7)"
+    while IFS='|' read -r d c; do
+      [[ "$c" -gt "$max_count" ]] && max_count="$c"
+    done <<< "$daily_raw"
+
+    while IFS='|' read -r d c; do
+      local bar_len=$(( c * 20 / max_count ))
+      local bar=""
+      local j
+      for ((j=0; j<20; j++)); do
+        if [[ "$j" -lt "$bar_len" ]]; then
+          bar+="█"
+        else
+          bar+="░"
+        fi
+      done
+      local day_name
+      day_name="$(date -j -f "%Y-%m-%d" "$d" +%a 2>/dev/null || date -d "$d" +%a 2>/dev/null || echo "$d")"
+      printf "  %s %s %s\n" "$day_name" "$bar" "$c"
+    done <<< "$daily_raw"
+
+    local fav_anim
+    fav_anim="$(state_most_used 6)"
+    local fav_tier
+    fav_tier="$(state_most_used 4)"
+    echo ""
+    printf "  Most used animation:  %s\n" "${fav_anim:-?}"
+    printf "  Favorite tier:        %s\n" "${fav_tier:-?}"
+  else
+    echo "  (no history yet)"
+  fi
+
+  local milestones_raw
+  milestones_raw="$(printf '%s' "$(cat "$STATS_FILE" 2>/dev/null)" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)"
+  [[ "$milestones_raw" == "[]" ]] && milestones_raw="none yet"
+  [[ "$milestones_raw" != "none yet" ]] && milestones_raw="$(printf '%s' "$milestones_raw" | tr -d '[]')"
+  printf "  Milestones:           %s\n" "$milestones_raw"
+
+  local last_trigger
+  last_trigger="$(printf '%s' "$(cat "$STATS_FILE" 2>/dev/null)" | grep -o '"last_trigger":"[^"]*"' | cut -d'"' -f4)"
+  printf "  Last trigger:         %s\n" "${last_trigger:-never}"
+
+  echo ""
   exit 0
 fi
 
