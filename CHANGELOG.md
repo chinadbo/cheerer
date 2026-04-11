@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [2.1.0] - 2026-04-11
+
+### Bug Fixes
+
+- Fixed midnight crash in time-of-day mood adjustment — `hour="${hour#0}"` replaced with `hour=$((10#$hour))` for forced decimal interpretation
+- Fixed fragile JSON parsing in state.sh and bin/cheer — replaced `grep -o` with bash parameter expansion
+- Fixed cooldown race condition — timestamp write moved after render_emit, skipped during cooldown
+- Fixed display width calculation — ALL characters were getting width 2 because `[[:ascii:]]` doesn't work in bash `[[ =~ ]]`; replaced with UTF-8 byte-length approach
+- Fixed fragile version extraction in bin/cheer — replaced `grep | cut` with precise `sed -n` anchoring
+
+### Features
+
+- Added `--help` flag with usage info and all environment variable documentation
+- Added `--config` flag to display current effective configuration values
+- Added `--disable` / `--enable` toggle with secure config.sh sourcing (only CHEERER_* assignments allowed)
+- Added message fatigue detection — same message excluded after 3+ appearances in last 5 history entries
+- Added `CHEERER_ANIM_DURATION` environment variable override for animation frame count (min: 5)
+
 ## [2.0.0] - 2026-04-11
 
 - Replaced pixel-art frame animations with danmaku (bullet-screen) floating-subtitle engine
