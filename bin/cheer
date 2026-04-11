@@ -72,14 +72,18 @@ _cheerer_stats() {
     echo "  (no history yet)"
   fi
 
+  local _stats_raw
+  _stats_raw="$(cat "$STATS_FILE" 2>/dev/null || true)"
   local milestones_raw
-  milestones_raw="$(printf '%s' "$(cat "$STATS_FILE" 2>/dev/null)" | grep -o '"milestones":\[[^]]*\]' | cut -d: -f2-)"
+  milestones_raw="${_stats_raw#*\"milestones\":}"
+  milestones_raw="${milestones_raw%%\}*}"
   [[ "$milestones_raw" == "[]" ]] && milestones_raw="none yet"
   [[ "$milestones_raw" != "none yet" ]] && milestones_raw="$(printf '%s' "$milestones_raw" | tr -d '[]')"
   printf "  Milestones:           %s\n" "$milestones_raw"
 
   local last_trigger
-  last_trigger="$(printf '%s' "$(cat "$STATS_FILE" 2>/dev/null)" | grep -o '"last_trigger":"[^"]*"' | cut -d'"' -f4)"
+  last_trigger="${_stats_raw#*\"last_trigger\":\"}"
+  last_trigger="${last_trigger%%\"*}"
   printf "  Last trigger:         %s\n" "${last_trigger:-never}"
 
   echo ""
