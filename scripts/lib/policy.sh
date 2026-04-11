@@ -24,8 +24,11 @@ _policy_apply_time_of_day() {
 policy_pick_animation() {
   local recent_csv=",${RECENT_ANIMATIONS:-},"
   local candidate candidates=()
+  local _anim_dir="${ANIM_DIR:-$PWD/scripts/animations}"
 
-  for f in "${ANIM_DIR:-$PWD/scripts/animations}"/*.sh; do
+  [[ -d "$_anim_dir" ]] || { POLICY_ANIMATION="basketball"; return 0; }
+
+  for f in "$_anim_dir"/*.sh; do
     [[ -f "$f" ]] || continue
     candidates+=("$(basename "$f" .sh)")
   done

@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [2.1.1] - 2026-04-11
+
+### Bug Fixes
+
+- Fixed multi-byte character clipping in danmaku animation — `${text:$clip}` used character offset for a column-based value, corrupting CJK/emoji at left edge; now skips by accumulated display width
+- Fixed temp file leak in `state_most_used()` — replaced `mktemp` + file pipeline with inline pipe, no orphan files on early exit
+- Fixed milestone message unbounded length — capped concatenation at 60 chars to prevent terminal width overflow in danmaku
+- Fixed cooldown race condition — timestamp write moved before `render_emit` so concurrent processes see the lock immediately
+- Fixed silent animation discovery failure — added directory existence check before glob; falls back gracefully if ANIM_DIR missing
+- Fixed invalid animation name accepted — `CHEERER_ANIM` now validates the `.sh` file exists before using it; falls back to random
+
 ## [2.1.0] - 2026-04-11
 
 ### Bug Fixes

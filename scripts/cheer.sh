@@ -109,7 +109,7 @@ fi
 state_record_trigger "$CURRENT_ISO"
 policy_select_celebration
 if [[ "$CHEERER_ANIM" != "random" ]] && [[ "$CHEERER_ANIM" != "epic" ]]; then
-  if [[ "$CHEERER_ANIM" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  if [[ "$CHEERER_ANIM" =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -f "$ANIM_DIR/$CHEERER_ANIM.sh" ]]; then
     POLICY_ANIMATION="$CHEERER_ANIM"
   else
     CHEERER_ANIM="random"
@@ -117,10 +117,10 @@ if [[ "$CHEERER_ANIM" != "random" ]] && [[ "$CHEERER_ANIM" != "epic" ]]; then
 fi
 render_select_message
 render_should_animate
-render_emit
 if [[ "$IN_COOLDOWN" == "false" ]]; then
   echo "$CURRENT_TS" > "$COOLDOWN_FILE" 2>/dev/null || true
 fi
+render_emit
 state_append_history "$CURRENT_TS" "$HOOK_EVENT" "${TASK_DURATION:-0}" "$POLICY_TIER" "$POLICY_MOOD" "$POLICY_ANIMATION" "$RENDER_MESSAGE_ID"
 
 exit 0

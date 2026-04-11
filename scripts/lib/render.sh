@@ -60,6 +60,7 @@ render_select_message() {
         RENDER_MESSAGE_ID="$message_id"
         RENDER_MESSAGE_TEXT="$message_text"
         [[ -n "${STATE_MILESTONE_MSG:-}" ]] && RENDER_MESSAGE_TEXT="$RENDER_MESSAGE_TEXT ${STATE_MILESTONE_MSG}"
+        RENDER_MESSAGE_TEXT="${RENDER_MESSAGE_TEXT:0:60}"
         return 0
       fi
       [[ -n "$fallback_line" ]] || fallback_line="$message_id|$message_text"
@@ -70,6 +71,7 @@ render_select_message() {
     RENDER_MESSAGE_ID="${fallback_line%%|*}"
     RENDER_MESSAGE_TEXT="${fallback_line#*|}"
     [[ -n "${STATE_MILESTONE_MSG:-}" ]] && RENDER_MESSAGE_TEXT="$RENDER_MESSAGE_TEXT ${STATE_MILESTONE_MSG}"
+    RENDER_MESSAGE_TEXT="${RENDER_MESSAGE_TEXT:0:60}"
     return 0
   fi
 

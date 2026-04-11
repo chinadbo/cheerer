@@ -154,10 +154,5 @@ state_daily_counts() {
 
 state_most_used() {
   local field_index="$1"
-  local counts
-  counts="$(mktemp "${TMPDIR:-/tmp}/cheerer_counts.XXXXXX")"
-
-  cut -d'|' -f"$field_index" "$HISTORY_FILE" | sort | uniq -c | sort -rn > "$counts"
-  head -1 "$counts" | awk '{print $2}'
-  rm -f "$counts"
+  cut -d'|' -f"$field_index" "$HISTORY_FILE" | sort | uniq -c | sort -rn | head -1 | awk '{print $2}'
 }

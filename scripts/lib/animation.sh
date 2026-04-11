@@ -82,8 +82,18 @@ anim_danmaku_draw() {
       if [[ "$best_pos" -ge 1 ]]; then
         printf '%*s%s%s%s' "$((best_pos - 1))" "" "$color" "$text" "$_RESET"
       elif [[ $((best_pos + disp_len)) -ge 1 ]]; then
-        local clip=$((1 - best_pos))
-        printf '%s%s%s' "$color" "${text:$clip}" "$_RESET"
+        # Skip characters by accumulated display width (not byte/char index)
+        # because ${text:$clip} would use char offset but $clip is in columns
+        local clip=$((1 - best_pos)) _w=0 _c=0 _cl
+        while (( _w < clip && _c < ${#text} )); do
+          _cl=$(LC_ALL=C printf '%s' "${text:_c:1}" | wc -c)
+          _cl="${_cl##* }"
+          if (( _cl == 1 )); then (( _w += 1 ))
+          elif (( _cl == 2 )); then (( _w += 1 ))
+          else (( _w += 2 )); fi
+          (( _c++ ))
+        done
+        printf '%s%s%s' "$color" "${text:_c}" "$_RESET"
       fi
     fi
 
