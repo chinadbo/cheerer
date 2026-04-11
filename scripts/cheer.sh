@@ -83,7 +83,6 @@ if [[ -f "$COOLDOWN_FILE" ]]; then
     IN_COOLDOWN="true"
   fi
 fi
-echo "$CURRENT_TS" > "$COOLDOWN_FILE" 2>/dev/null || true
 
 if [[ ! "${CHEERER_EPIC_THRESHOLD:-}" =~ ^[0-9]+$ ]]; then
   CHEERER_EPIC_THRESHOLD=60
@@ -105,6 +104,9 @@ fi
 render_select_message
 render_should_animate
 render_emit
+if [[ "$IN_COOLDOWN" == "false" ]]; then
+  echo "$CURRENT_TS" > "$COOLDOWN_FILE" 2>/dev/null || true
+fi
 state_append_history "$CURRENT_TS" "$HOOK_EVENT" "${TASK_DURATION:-0}" "$POLICY_TIER" "$POLICY_MOOD" "$POLICY_ANIMATION" "$RENDER_MESSAGE_ID"
 
 exit 0

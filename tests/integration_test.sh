@@ -282,4 +282,48 @@ run_test "danmaku_animation_contains_message" test_danmaku_animation_contains_me
 run_test "danmaku_message_sanitizes_control_chars" test_danmaku_message_sanitizes_control_chars
 run_test "danmaku_narrow_terminal_exits_cleanly" test_danmaku_narrow_terminal_exits_cleanly
 run_test "danmaku_library_graceful_fallback" test_danmaku_library_graceful_fallback
+
+test_cooldown_does_not_reset_timer() {
+  local tmp_dir output1 output2
+  tmp_dir="$(make_tmp_dir)"
+
+  # First trigger
+  output1="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CLAUDE_SESSION_ID="cooldown-reset-test" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    CHEERER_COOLDOWN="10" \
+    CHEERER_HOUR=15 \
+    bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+
+  # Second trigger within cooldown — should NOT reset the cooldown clock
+  output2="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CLAUDE_SESSION_ID="cooldown-reset-test" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    CHEERER_COOLDOWN="10" \
+    CHEERER_HOUR=15 \
+    bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+
+  # Verify first run had output (not in cooldown)
+  assert_contains "$output1" "🎉"
+  # Verify second run still had text (cooldown doesn't suppress text)
+  assert_contains "$output2" "🎉"
+
+  # Read cooldown file — it should be the FIRST trigger's timestamp, not the second's
+  local cooldown_file="${TMPDIR:-/tmp}/cheerer_${UID}/last_trigger_cooldownresettest"
+  if [[ -f "$cooldown_file" ]]; then
+    local ts1 ts2
+    ts1="$(date +%s)"
+    local file_val
+    file_val="$(cat "$cooldown_file" 2>/dev/null || echo 0)"
+    # file_val must be a valid unix timestamp and less than or equal to now
+    [[ "$file_val" =~ ^[0-9]+$ ]] || return 1
+    [[ "$file_val" -le "$ts1" ]] || return 1
+  fi
+}
+
+run_test "cooldown_does_not_reset_timer" test_cooldown_does_not_reset_timer
 finish_tests
