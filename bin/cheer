@@ -80,4 +80,39 @@ if [[ "${1:-}" == "--stats" ]]; then
   exit 0
 fi
 
+if [[ "${1:-}" == "--list" ]]; then
+  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  echo "Animations:"
+  for f in "$SCRIPT_DIR/scripts/animations"/*.sh; do
+    [[ -f "$f" ]] || continue
+    echo "  $(basename "$f" .sh)"
+  done
+  echo "Languages: zh, en, ja, ko, es"
+  exit 0
+fi
+
+if [[ "${1:-}" == "--preview" ]]; then
+  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  ANIM_NAME="${2:-}"
+  ANIM_DIR="$SCRIPT_DIR/scripts/animations"
+
+  if [[ -z "$ANIM_NAME" ]]; then
+    local anims=()
+    for f in "$ANIM_DIR"/*.sh; do
+      [[ -f "$f" ]] || continue
+      anims+=("$(basename "$f" .sh)")
+    done
+    ANIM_NAME="${anims[$((RANDOM % ${#anims[@]}))]}"
+  fi
+
+  if [[ -f "$ANIM_DIR/$ANIM_NAME.sh" ]]; then
+    bash "$ANIM_DIR/$ANIM_NAME.sh"
+  else
+    echo "Animation not found: $ANIM_NAME"
+    echo "Available: $(cd "$ANIM_DIR" && ls *.sh 2>/dev/null | sed 's/.sh//g' | tr '\n' ' ')"
+    exit 1
+  fi
+  exit 0
+fi
+
 exec "$SCRIPT_DIR/scripts/cheer.sh" "$@"
