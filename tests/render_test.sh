@@ -252,4 +252,22 @@ test_render_no_fatigue_below_threshold() {
 
 run_test "render_fatigue_forces_different_message" test_render_fatigue_forces_different_message
 run_test "render_no_fatigue_below_threshold" test_render_no_fatigue_below_threshold
+
+test_render_custom_message_with_special_chars() {
+  CHEERER_ROOT="$PWD"
+  CHEERER_LANG="en"
+  CHEERER_CUSTOM_MSG="Hello 'world' and \"quotes\""
+  CHEERER_CUSTOM_ONLY="false"
+  POLICY_TIER="quick"
+  POLICY_MOOD="gentle"
+  RECENT_MESSAGE_IDS=""
+  STATE_MILESTONE_MSG=""
+
+  render_select_message
+
+  assert_eq "custom" "$RENDER_MESSAGE_ID"
+  assert_eq "Hello 'world' and \"quotes\"" "$RENDER_MESSAGE_TEXT"
+}
+
+run_test "render_custom_message_with_special_chars" test_render_custom_message_with_special_chars
 finish_tests

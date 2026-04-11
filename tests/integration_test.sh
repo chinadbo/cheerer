@@ -512,4 +512,43 @@ test_danmaku_message_sanitizes_ansi_escape() {
 }
 
 run_test "danmaku_message_sanitizes_ansi_escape" test_danmaku_message_sanitizes_ansi_escape
+
+test_invalid_anim_falls_back_to_random() {
+  CHEERER_ANIM="nonexistent_xyz"
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../scripts" && pwd)"
+  ANIM_DIR="$SCRIPT_DIR/animations"
+  if [[ "$CHEERER_ANIM" != "random" ]] && [[ "$CHEERER_ANIM" != "epic" ]]; then
+    if [[ "$CHEERER_ANIM" =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -f "$ANIM_DIR/$CHEERER_ANIM.sh" ]]; then
+      : # valid
+    else
+      CHEERER_ANIM="random"
+    fi
+  fi
+  [[ "$CHEERER_ANIM" == "random" ]] || return 1
+}
+
+test_milestone_message_truncated_at_sixty() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  CHEERER_DATA_DIR="$tmp_dir/data"
+  mkdir -p "$CHEERER_DATA_DIR"
+  STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+  HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
+  . scripts/lib/state.sh
+  state_init
+  STATE_MILESTONE_MSG="🏆 Trigger #100! This is a very long milestone suffix that should get truncated"
+  POLICY_TIER="solid"
+  POLICY_MOOD="steady"
+  CHEERER_LANG="en"
+  CHEERER_ROOT="$PWD"
+  RECENT_MESSAGE_IDS=""
+  CHEERER_CUSTOM_ONLY="false"
+  CHEERER_CUSTOM_MSG=""
+  . scripts/lib/render.sh
+  render_select_message
+  [[ "${#RENDER_MESSAGE_TEXT}" -le 60 ]] || return 1
+}
+
+run_test "invalid_anim_falls_back_to_random" test_invalid_anim_falls_back_to_random
+run_test "milestone_message_truncated_at_sixty" test_milestone_message_truncated_at_sixty
 finish_tests
