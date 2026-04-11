@@ -463,4 +463,42 @@ test_anim_duration_override_below_minimum() {
 run_test "anim_duration_override_short" test_anim_duration_override_short
 run_test "anim_duration_override_invalid_ignored" test_anim_duration_override_invalid_ignored
 run_test "anim_duration_override_below_minimum" test_anim_duration_override_below_minimum
+
+test_help_flag_shows_usage() {
+  local output
+  output="$(bash bin/cheer --help 2>&1)"
+  assert_contains "$output" "Usage: cheer"
+  assert_contains "$output" "--help"
+  assert_contains "$output" "--stats"
+  assert_contains "$output" "--preview"
+  assert_contains "$output" "--list"
+  assert_contains "$output" "--config"
+  assert_contains "$output" "--disable"
+  assert_contains "$output" "--enable"
+  assert_contains "$output" "--version"
+  assert_contains "$output" "CHEERER_LANG"
+  assert_contains "$output" "CHEERER_COOLDOWN"
+  assert_contains "$output" "CHEERER_ANIM_DURATION"
+}
+
+test_config_flag_shows_values() {
+  local output
+  output="$(CHEERER_LANG=en CHEERER_VOICE=off CHEERER_STYLE=hype bash bin/cheer --config 2>&1)"
+  assert_contains "$output" "CHEERER_LANG=en"
+  assert_contains "$output" "CHEERER_VOICE=off"
+  assert_contains "$output" "CHEERER_STYLE=hype"
+  assert_contains "$output" "Config file"
+}
+
+test_config_flag_shows_defaults() {
+  local output
+  output="$(bash bin/cheer --config 2>&1)"
+  assert_contains "$output" "CHEERER_LANG=zh"
+  assert_contains "$output" "CHEERER_COOLDOWN=3"
+  assert_contains "$output" "CHEERER_ANIM_DURATION=30"
+}
+
+run_test "help_flag_shows_usage" test_help_flag_shows_usage
+run_test "config_flag_shows_values" test_config_flag_shows_values
+run_test "config_flag_shows_defaults" test_config_flag_shows_defaults
 finish_tests

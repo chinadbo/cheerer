@@ -26,6 +26,88 @@ if [[ "${1:-}" == "--enable" ]]; then
   exit 0
 fi
 
+_cheerer_help() {
+  cat << 'HELPEOF'
+cheerer — Context-aware celebration for Claude Code
+
+Usage: cheer [flag]
+
+Flags:
+  --epic            Force epic mode (play all animations in sequence)
+  --stats           Show celebration statistics
+  --preview [name]  Preview an animation (random if name omitted)
+  --list            List available animations and languages
+  --config          Show current configuration
+  --disable         Disable cheerer (persists across sessions)
+  --enable          Re-enable cheerer
+  --version         Print version
+  --help            Show this help message
+
+Environment variables:
+  CHEERER_ENABLED        Master switch (true/false, default: true)
+  CHEERER_LANG           Voice language (zh/en/ja/ko/es, default: zh)
+  CHEERER_ANIM           Animation style (random/[name]/epic, default: random)
+  CHEERER_VOICE          Voice output (on/off, default: on)
+  CHEERER_STYLE          Celebration style (adaptive/balanced/hype/cozy)
+  CHEERER_INTENSITY      Intensity (soft/normal/high)
+  CHEERER_MODE           Output mode (auto/full/text)
+  CHEERER_DUMB           Force text-only (auto/true/false)
+  CHEERER_COOLDOWN       Cooldown seconds (default: 3)
+  CHEERER_ANIM_DURATION  Animation frames override (default: 30, min: 5)
+  CHEERER_EPIC           Force epic mode (true/false)
+  CHEERER_EPIC_THRESHOLD Epic mode auto-trigger seconds (default: 60)
+  CHEERER_CUSTOM_ONLY    Use only custom messages (true/false)
+HELPEOF
+  exit 0
+}
+
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+  _cheerer_help
+fi
+
+_cheerer_config() {
+  CHEERER_ENABLED="${CHEERER_ENABLED:-true}"
+  CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
+  CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
+  CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
+  CHEERER_STYLE="${CHEERER_STYLE:-${CLAUDE_PLUGIN_OPTION_STYLE:-adaptive}}"
+  CHEERER_INTENSITY="${CHEERER_INTENSITY:-${CLAUDE_PLUGIN_OPTION_INTENSITY:-normal}}"
+  CHEERER_MODE="${CHEERER_MODE:-auto}"
+  CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
+  CHEERER_ANIM_DURATION="${CHEERER_ANIM_DURATION:-30}"
+  CHEERER_EPIC="${CHEERER_EPIC:-false}"
+  CHEERER_EPIC_THRESHOLD="${CHEERER_EPIC_THRESHOLD:-60}"
+
+  echo ""
+  echo "  cheerer — Current Configuration"
+  echo ""
+  printf "  CHEERER_ENABLED=%s\n" "$CHEERER_ENABLED"
+  printf "  CHEERER_LANG=%s\n" "$CHEERER_LANG"
+  printf "  CHEERER_ANIM=%s\n" "$CHEERER_ANIM"
+  printf "  CHEERER_VOICE=%s\n" "$CHEERER_VOICE"
+  printf "  CHEERER_STYLE=%s\n" "$CHEERER_STYLE"
+  printf "  CHEERER_INTENSITY=%s\n" "$CHEERER_INTENSITY"
+  printf "  CHEERER_MODE=%s\n" "$CHEERER_MODE"
+  printf "  CHEERER_COOLDOWN=%s\n" "$CHEERER_COOLDOWN"
+  printf "  CHEERER_ANIM_DURATION=%s\n" "$CHEERER_ANIM_DURATION"
+  printf "  CHEERER_EPIC=%s\n" "$CHEERER_EPIC"
+  printf "  CHEERER_EPIC_THRESHOLD=%s\n" "$CHEERER_EPIC_THRESHOLD"
+  echo ""
+
+  local config_file="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}/config.sh"
+  if [[ -f "$config_file" ]]; then
+    printf "  Config file: %s (active)\n" "$config_file"
+  else
+    printf "  Config file: %s (not found)\n" "$config_file"
+  fi
+  echo ""
+  exit 0
+}
+
+if [[ "${1:-}" == "--config" ]]; then
+  _cheerer_config
+fi
+
 _cheerer_stats() {
   CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
   STATS_FILE="$CHEERER_DATA_DIR/stats.json"
