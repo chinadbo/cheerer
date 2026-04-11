@@ -101,7 +101,7 @@ test_state_read_stats_with_extra_fields() {
 
 run_test "state_read_stats_with_extra_fields" test_state_read_stats_with_extra_fields
 
-test_state_read_stats_with_escaped_quotes() {
+test_state_read_stats_with_timezone_timestamp() {
   local tmp_dir
   tmp_dir="$(make_tmp_dir)"
   CHEERER_DATA_DIR="$tmp_dir/data"
@@ -118,5 +118,5 @@ test_state_read_stats_with_escaped_quotes() {
   assert_eq "[]" "$STATS_MILESTONES"
 }
 
-run_test "state_read_stats_with_escaped_quotes" test_state_read_stats_with_escaped_quotes
+run_test "state_read_stats_with_timezone_timestamp" test_state_read_stats_with_timezone_timestamp
 finish_tests

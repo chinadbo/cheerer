@@ -1,6 +1,6 @@
 {
   "name": "cheerer",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Plays context-aware encouragement, pixel animations, and multilingual voice feedback when Claude Code finishes a task.",
   "author": {
     "name": "chinadbo",
