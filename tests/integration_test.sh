@@ -501,4 +501,15 @@ test_config_flag_shows_defaults() {
 run_test "help_flag_shows_usage" test_help_flag_shows_usage
 run_test "config_flag_shows_values" test_config_flag_shows_values
 run_test "config_flag_shows_defaults" test_config_flag_shows_defaults
+
+test_danmaku_message_sanitizes_ansi_escape() {
+  . scripts/lib/animation.sh
+  local msg
+  msg="$(anim_sanitize_msg $'\033[2JClear\033[31mRed')"
+  assert_not_contains "$msg" $'\033'
+  assert_contains "$msg" "Clear"
+  assert_contains "$msg" "Red"
+}
+
+run_test "danmaku_message_sanitizes_ansi_escape" test_danmaku_message_sanitizes_ansi_escape
 finish_tests

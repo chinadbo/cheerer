@@ -33,11 +33,12 @@ anim_display_width() {
   printf '%d' "$width"
 }
 
-# Sanitize user-supplied message: strip control chars (ESC, newlines, etc.)
+# Sanitize user-supplied message: strip control chars and CSI sequences
 anim_sanitize_msg() {
   local raw="$1"
-  # Remove C0 control chars (0x01-0x1F) including ESC, newline, CR
-  printf '%s' "$raw" | tr -d '\001-\037'
+  # Strip C0 control chars (0x01-0x1F) including ESC, newline, CR
+  # Also strip CSI sequences (ESC [ ... final_byte) to prevent terminal injection
+  printf '%s' "$raw" | tr -d '\001-\037' | sed $'s/\033\[[0-9;]*[A-Za-z]//g'
 }
 
 # Draw one frame of the danmaku animation.
