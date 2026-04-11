@@ -7,7 +7,7 @@ if [[ "${1:-}" == "--epic" ]]; then
 fi
 
 if [[ "${1:-}" == "--version" ]]; then
-  printf 'cheerer %s\n' "$(grep '"version"' "$SCRIPT_DIR/package.json" | cut -d'"' -f4)"
+  printf 'cheerer %s\n' "$(sed -n '/"version"/{s/.*: *"\([^"]*\)".*/\1/p;q;}' "$SCRIPT_DIR/package.json")"
   exit 0
 fi
 
