@@ -85,9 +85,54 @@ test_rapid_fire_count_sets_solid_rapid_fire_mood() {
   assert_eq "rapid_fire" "$POLICY_MOOD"
 }
 
+test_animation_discovers_from_anim_dir() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/animations"
+  printf '#!/bin/bash\n' > "$tmp_dir/animations/rocket.sh"
+  printf '#!/bin/bash\n' > "$tmp_dir/animations/trophy.sh"
+  ANIM_DIR="$tmp_dir/animations"
+  RECENT_ANIMATIONS=""
+
+  policy_pick_animation
+
+  assert_eq "rocket" "$POLICY_ANIMATION"
+}
+
+test_animation_avoids_recent_picks() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/animations"
+  printf '#!/bin/bash\n' > "$tmp_dir/animations/rocket.sh"
+  printf '#!/bin/bash\n' > "$tmp_dir/animations/trophy.sh"
+  printf '#!/bin/bash\n' > "$tmp_dir/animations/wave.sh"
+  ANIM_DIR="$tmp_dir/animations"
+  RECENT_ANIMATIONS="rocket,trophy"
+
+  policy_pick_animation
+
+  assert_eq "wave" "$POLICY_ANIMATION"
+}
+
+test_animation_falls_back_when_all_recent() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/animations"
+  printf '#!/bin/bash\n' > "$tmp_dir/animations/rocket.sh"
+  ANIM_DIR="$tmp_dir/animations"
+  RECENT_ANIMATIONS="rocket"
+
+  policy_pick_animation
+
+  assert_eq "rocket" "$POLICY_ANIMATION"
+}
+
 run_test "stop_defaults_to_quick_gentle" test_stop_defaults_to_quick_gentle
 run_test "long_task_becomes_big_triumphant" test_long_task_becomes_big_triumphant
 run_test "milestone_forces_legendary_fireworks" test_milestone_forces_legendary_fireworks
 run_test "hype_style_upgrades_solid_runs" test_hype_style_upgrades_solid_runs
 run_test "rapid_fire_count_sets_solid_rapid_fire_mood" test_rapid_fire_count_sets_solid_rapid_fire_mood
+run_test "animation_discovers_from_anim_dir" test_animation_discovers_from_anim_dir
+run_test "animation_avoids_recent_picks" test_animation_avoids_recent_picks
+run_test "animation_falls_back_when_all_recent" test_animation_falls_back_when_all_recent
 finish_tests

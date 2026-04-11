@@ -91,10 +91,9 @@ render_emit() {
 
   if [[ "$RENDER_ANIMATE" == "true" ]] && [[ "$IN_COOLDOWN" == "false" ]]; then
     if [[ "${CHEERER_ANIM:-random}" == "epic" ]]; then
-      for anim_name in basketball dance fireworks; do
-        if [[ -f "$ANIM_DIR/$anim_name.sh" ]]; then
-          bash "$ANIM_DIR/$anim_name.sh"
-        fi
+      for anim_file in "$ANIM_DIR"/*.sh; do
+        [[ -f "$anim_file" ]] || continue
+        bash "$anim_file"
       done
     elif [[ -f "$ANIM_DIR/$POLICY_ANIMATION.sh" ]]; then
       bash "$ANIM_DIR/$POLICY_ANIMATION.sh"

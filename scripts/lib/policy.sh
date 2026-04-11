@@ -1,17 +1,22 @@
 #!/bin/bash
 
 policy_pick_animation() {
-  local candidate
   local recent_csv=",${RECENT_ANIMATIONS:-},"
+  local candidate candidates=()
 
-  for candidate in basketball dance fireworks; do
+  for f in "${ANIM_DIR:-$PWD/scripts/animations}"/*.sh; do
+    [[ -f "$f" ]] || continue
+    candidates+=("$(basename "$f" .sh)")
+  done
+
+  for candidate in "${candidates[@]}"; do
     if [[ "$recent_csv" != *",$candidate,"* ]]; then
       POLICY_ANIMATION="$candidate"
       return 0
     fi
   done
 
-  POLICY_ANIMATION="basketball"
+  POLICY_ANIMATION="${candidates[0]:-basketball}"
 }
 
 policy_select_celebration() {
