@@ -1,6 +1,6 @@
 {
   "name": "cheerer",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Plays context-aware encouragement, pixel animations, and multilingual voice feedback when Claude Code finishes a task.",
   "author": {
     "name": "chinadbo",
@@ -14,13 +14,13 @@
     "lang": {
       "type": "string",
       "title": "Voice language",
-      "description": "Voice language for encouragement messages (zh / en / ja, default: zh)",
+      "description": "Voice language for encouragement messages (zh / en / ja / ko / es, default: zh)",
       "sensitive": false
     },
     "anim": {
       "type": "string",
       "title": "Animation style",
-      "description": "Animation style (random / basketball / dance / fireworks / epic, default: random)",
+      "description": "Animation style (random / [animation-name] / epic, default: random)",
       "sensitive": false
     },
     "voice": {
