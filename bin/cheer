@@ -11,6 +11,21 @@ if [[ "${1:-}" == "--version" ]]; then
   exit 0
 fi
 
+if [[ "${1:-}" == "--disable" ]]; then
+  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
+  mkdir -p "$CHEERER_DATA_DIR"
+  printf 'CHEERER_ENABLED=false\n' > "$CHEERER_DATA_DIR/config.sh"
+  echo "cheerer disabled. Run 'cheer --enable' to re-enable."
+  exit 0
+fi
+
+if [[ "${1:-}" == "--enable" ]]; then
+  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
+  rm -f "$CHEERER_DATA_DIR/config.sh"
+  echo "cheerer enabled."
+  exit 0
+fi
+
 _cheerer_stats() {
   CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
   STATS_FILE="$CHEERER_DATA_DIR/stats.json"

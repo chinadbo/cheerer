@@ -1,6 +1,20 @@
 #!/bin/bash
 set +e
 
+# Compute data dir early (needed for config.sh path)
+CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
+
+# Source user config override if it exists
+# Security: validate that config.sh only contains CHEERER_* variable assignments
+if [[ -f "$CHEERER_DATA_DIR/config.sh" ]]; then
+  if grep -qE '^[[:space:]]*CHEERER_[A-Z_]+=' "$CHEERER_DATA_DIR/config.sh" 2>/dev/null; then
+    # Only source if every non-empty, non-comment line is a CHEERER_* assignment
+    if ! grep -qvE '^[[:space:]]*(CHEERER_[A-Z_]+=.*|#.*|)[[:space:]]*$' "$CHEERER_DATA_DIR/config.sh" 2>/dev/null; then
+      . "$CHEERER_DATA_DIR/config.sh"
+    fi
+  fi
+fi
+
 CHEERER_ENABLED="${CHEERER_ENABLED:-true}"
 if [[ "$CHEERER_ENABLED" == "false" ]]; then
   exit 0
@@ -21,7 +35,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHEERER_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ANIM_DIR="$SCRIPT_DIR/animations"
 VOICE_DIR="$SCRIPT_DIR/voices"
-CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
 STATS_FILE="$CHEERER_DATA_DIR/stats.json"
 HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
 

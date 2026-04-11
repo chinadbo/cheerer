@@ -375,4 +375,70 @@ run_test "anim_display_width_latin_extended" test_anim_display_width_latin_exten
 run_test "anim_display_width_emoji" test_anim_display_width_emoji
 run_test "anim_display_width_mixed" test_anim_display_width_mixed
 run_test "anim_display_width_korean" test_anim_display_width_korean
+
+test_disable_writes_config() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+
+  CLAUDE_PLUGIN_DATA="$tmp_dir/data" bash bin/cheer --disable
+
+  [[ -f "$tmp_dir/data/config.sh" ]] || return 1
+  local content
+  content="$(cat "$tmp_dir/data/config.sh")"
+  assert_eq "CHEERER_ENABLED=false" "$content"
+}
+
+test_enable_removes_config() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/data"
+  printf 'CHEERER_ENABLED=false\n' > "$tmp_dir/data/config.sh"
+
+  CLAUDE_PLUGIN_DATA="$tmp_dir/data" bash bin/cheer --enable
+
+  [[ ! -f "$tmp_dir/data/config.sh" ]] || return 1
+}
+
+test_disabled_cheerer_exits_silently() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/data"
+  printf 'CHEERER_ENABLED=false\n' > "$tmp_dir/data/config.sh"
+
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CLAUDE_SESSION_ID="disabled-test" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    CHEERER_HOUR=15 \
+    bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json)"
+
+  [[ -z "$output" ]] || return 1
+}
+
+test_config_sh_only_allows_cheerer_vars() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/data"
+  # config.sh with a malicious line should NOT be sourced
+  printf 'CHEERER_LANG=en\nrm -rf /tmp/fake\nCHEERER_VOICE=off\n' > "$tmp_dir/data/config.sh"
+
+  # The script should NOT source this file (contains non-CHEERER lines)
+  # and should fall through to default behavior (no crash)
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CLAUDE_SESSION_ID="config-security-test" \
+    CHEERER_LANG="zh" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    CHEERER_HOUR=15 \
+    bash scripts/cheer.sh < tests/fixtures/taskcompleted-short.json 2>&1)"
+
+  # Should still work — config.sh was rejected, defaults used
+  [[ -n "$output" ]] || return 1
+}
+
+run_test "disable_writes_config" test_disable_writes_config
+run_test "enable_removes_config" test_enable_removes_config
+run_test "disabled_cheerer_exits_silently" test_disabled_cheerer_exits_silently
+run_test "config_sh_only_allows_cheerer_vars" test_config_sh_only_allows_cheerer_vars
 finish_tests
