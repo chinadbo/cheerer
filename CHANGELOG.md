@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [2.2.0] - 2026-04-11
+
+### Refactoring
+
+- Deduplicated 5 voice scripts into a single parameterized `cheer.sh` with language-specific thin wrappers
+- Extracted `state_parse_json_field()` helper for reusable JSON key extraction in state.sh
+- Broke `scripts/cheer.sh` monolith into named functions: `_cheer_load_config`, `_cheer_check_enabled`, `_cheer_setup_tty`, `_cheer_parse_hook_event`, `_cheer_setup_dirs`, `_cheer_validate_config`, `_cheer_check_cooldown`, `_cheer_check_epic`, `_cheer_apply_anim_override`
+
+### Bug Fixes
+
+- Fixed milestones array regression — `[]` was parsed as `[]]` after `state_parse_json_field` refactor
+- Hardened `anim_sanitize_msg()` to strip CSI escape sequences (ESC[...letter) in addition to C0 control chars, preventing terminal injection via crafted ANSI codes
+
+### Tests
+
+- Added 4 tests for `state_parse_json_field()` (string, number, trailing, empty string)
+- Added tests for ANSI escape injection, milestone truncation, special chars in custom messages, and invalid animation fallback
+
 ## [2.1.1] - 2026-04-11
 
 ### Bug Fixes
