@@ -36,7 +36,7 @@ CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
 CHEERER_EPIC_THRESHOLD="${CHEERER_EPIC_THRESHOLD:-60}"
 CHEERER_EPIC="${CHEERER_EPIC:-false}"
 
-case "$CHEERER_LANG" in zh|en|ja) ;; *) CHEERER_LANG="zh" ;; esac
+case "$CHEERER_LANG" in zh|en|ja|ko|es) ;; *) CHEERER_LANG="zh" ;; esac
 case "$CHEERER_STYLE" in adaptive|balanced|hype|cozy) ;; *) CHEERER_STYLE="adaptive" ;; esac
 case "$CHEERER_INTENSITY" in soft|normal|high) ;; *) CHEERER_INTENSITY="normal" ;; esac
 case "$CHEERER_MODE" in auto|full|text) ;; *) CHEERER_MODE="auto" ;; esac
