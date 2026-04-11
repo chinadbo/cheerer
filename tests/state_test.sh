@@ -119,4 +119,33 @@ test_state_read_stats_with_timezone_timestamp() {
 }
 
 run_test "state_read_stats_with_timezone_timestamp" test_state_read_stats_with_timezone_timestamp
+
+test_state_parse_json_field_string() {
+  local val
+  val="$(state_parse_json_field '{"name":"hello","count":5}' "name")"
+  assert_eq "hello" "$val"
+}
+
+test_state_parse_json_field_number() {
+  local val
+  val="$(state_parse_json_field '{"total_triggers":42,"last_trigger":"today"}' "total_triggers")"
+  assert_eq "42" "$val"
+}
+
+test_state_parse_json_field_trailing() {
+  local val
+  val="$(state_parse_json_field '{"x":7}' "x")"
+  assert_eq "7" "$val"
+}
+
+test_state_parse_json_field_empty_string() {
+  local val
+  val="$(state_parse_json_field '{"name":"","count":1}' "name")"
+  assert_eq "" "$val"
+}
+
+run_test "state_parse_json_field_string" test_state_parse_json_field_string
+run_test "state_parse_json_field_number" test_state_parse_json_field_number
+run_test "state_parse_json_field_trailing" test_state_parse_json_field_trailing
+run_test "state_parse_json_field_empty_string" test_state_parse_json_field_empty_string
 finish_tests

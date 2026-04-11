@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Extract a JSON value by key from a single-line JSON string.
+# Handles: strings ("key":"value"), numbers ("key":42)
+# Not suitable for nested objects or arrays — use direct parsing for those.
+# Usage: state_parse_json_field "$raw" "total_triggers"
+state_parse_json_field() {
+  local raw="$1" key="$2"
+  local val="${raw#*\"$key\":}"
+  val="${val%%,*}"
+  val="${val%%\}*}"
+  # Strip surrounding quotes for string values
+  val="${val#\"}"
+  val="${val%\"}"
+  printf '%s' "$val"
+}
+
 state_defaults() {
   STATS_TOTAL_TRIGGERS=0
   STATS_LAST_TRIGGER=""
@@ -16,19 +31,26 @@ state_write_stats() {
 state_read_stats() {
   local raw
   raw="$(cat "$STATS_FILE" 2>/dev/null || true)"
-  STATS_TOTAL_TRIGGERS="${raw#*\"total_triggers\":}"
-  STATS_TOTAL_TRIGGERS="${STATS_TOTAL_TRIGGERS%%,*}"
-  STATS_TOTAL_TRIGGERS="${STATS_TOTAL_TRIGGERS%%\}*}"
+  [[ -n "$raw" ]] || return 1
+
+  STATS_TOTAL_TRIGGERS="$(state_parse_json_field "$raw" "total_triggers")"
   STATS_TOTAL_TRIGGERS="${STATS_TOTAL_TRIGGERS// /}"
 
-  STATS_LAST_TRIGGER="${raw#*\"last_trigger\":\"}"
-  STATS_LAST_TRIGGER="${STATS_LAST_TRIGGER%%\"*}"
+  STATS_LAST_TRIGGER="$(state_parse_json_field "$raw" "last_trigger")"
 
+  # Milestones is an array — extract between [ and ]
   STATS_MILESTONES="${raw#*\"milestones\":}"
   STATS_MILESTONES="${STATS_MILESTONES%%\}*}"
+  # Extract content between brackets
+  STATS_MILESTONES="${STATS_MILESTONES#*\[}"
+  STATS_MILESTONES="${STATS_MILESTONES%\]}"
+  if [[ -n "$STATS_MILESTONES" ]]; then
+    STATS_MILESTONES="[$STATS_MILESTONES]"
+  else
+    STATS_MILESTONES="[]"
+  fi
 
   [[ "$STATS_TOTAL_TRIGGERS" =~ ^[0-9]+$ ]] || return 1
-  [[ -n "${STATS_MILESTONES:-}" ]] || STATS_MILESTONES='[]'
   return 0
 }
 
