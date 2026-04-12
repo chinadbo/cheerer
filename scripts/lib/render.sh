@@ -12,7 +12,7 @@ render_load_custom_message() {
 
   while IFS= read -r line; do
     [[ "$line" =~ ^# ]] && continue
-    [[ -z "${line// }" ]] && continue
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
     picked+=("$line")
   done < "$custom_file"
 

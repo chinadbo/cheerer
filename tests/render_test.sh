@@ -270,4 +270,30 @@ test_render_custom_message_with_special_chars() {
 }
 
 run_test "render_custom_message_with_special_chars" test_render_custom_message_with_special_chars
+
+test_render_custom_message_skips_tab_only_lines() {
+  local tmp_dir
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir"
+  printf '\t\nShip it!\n\t\t\nNice.\n' > "$tmp_dir/custom-messages.txt"
+
+  CHEERER_ROOT="$PWD"
+  CHEERER_LANG="en"
+  CHEERER_DATA_DIR="$tmp_dir"
+  CHEERER_CUSTOM_ONLY="true"
+  CHEERER_CUSTOM_MSG=""
+  POLICY_TIER="solid"
+  POLICY_MOOD="steady"
+  RECENT_MESSAGE_IDS=""
+  STATE_MILESTONE_MSG=""
+
+  render_select_message
+
+  assert_eq "custom" "$RENDER_MESSAGE_ID"
+  # Tab-only lines must NOT become messages
+  [[ "$RENDER_MESSAGE_TEXT" == "Ship it!" ]] || [[ "$RENDER_MESSAGE_TEXT" == "Nice." ]] || return 1
+  [[ -n "${RENDER_MESSAGE_TEXT// /}" ]] || return 1
+}
+
+run_test "render_custom_message_skips_tab_only_lines" test_render_custom_message_skips_tab_only_lines
 finish_tests

@@ -376,6 +376,28 @@ run_test "anim_display_width_emoji" test_anim_display_width_emoji
 run_test "anim_display_width_mixed" test_anim_display_width_mixed
 run_test "anim_display_width_korean" test_anim_display_width_korean
 
+test_anim_term_width_falls_back_on_empty() {
+  . scripts/lib/animation.sh
+  # Override anim_term_width to return empty string
+  anim_term_width() { echo ""; }
+  local w
+  w="$(anim_term_width)"
+  [[ "${w:-0}" -ge 1 ]] || w=80
+  assert_eq "80" "$w"
+}
+
+test_anim_term_width_falls_back_on_zero() {
+  . scripts/lib/animation.sh
+  anim_term_width() { echo "0"; }
+  local w
+  w="$(anim_term_width)"
+  [[ "${w:-0}" -ge 1 ]] || w=80
+  assert_eq "80" "$w"
+}
+
+run_test "anim_term_width_falls_back_on_empty" test_anim_term_width_falls_back_on_empty
+run_test "anim_term_width_falls_back_on_zero" test_anim_term_width_falls_back_on_zero
+
 test_disable_writes_config() {
   local tmp_dir
   tmp_dir="$(make_tmp_dir)"
@@ -507,6 +529,9 @@ test_danmaku_message_sanitizes_ansi_escape() {
   local msg
   msg="$(anim_sanitize_msg $'\033[2JClear\033[31mRed')"
   assert_not_contains "$msg" $'\033'
+  # CSI parameter bytes ([2J, [31m) must also be stripped, not just ESC
+  assert_not_contains "$msg" '[2J'
+  assert_not_contains "$msg" '[31m'
   assert_contains "$msg" "Clear"
   assert_contains "$msg" "Red"
 }

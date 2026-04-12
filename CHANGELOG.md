@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [2.2.1] - 2026-04-12
+
+### Bug Fixes
+
+- Fixed `anim_sanitize_msg()` CSI escape removal being dead code — `tr -d '\001-\037'` stripped ESC bytes before `sed` could match CSI sequences; swapped pipeline order so `sed` runs first
+- Fixed `ANIM_TERM_WIDTH` empty/zero crash — added fallback to 80 columns when `tput cols` returns nothing
+- Fixed tab-only lines in custom-messages.txt being treated as valid messages — replaced space-only blank check with `[[[:space:]]]` class match
+
 ## [2.2.0] - 2026-04-11
 
 ### Refactoring

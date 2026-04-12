@@ -38,7 +38,7 @@ anim_sanitize_msg() {
   local raw="$1"
   # Strip C0 control chars (0x01-0x1F) including ESC, newline, CR
   # Also strip CSI sequences (ESC [ ... final_byte) to prevent terminal injection
-  printf '%s' "$raw" | tr -d '\001-\037' | sed $'s/\033\[[0-9;]*[A-Za-z]//g'
+  printf '%s' "$raw" | sed $'s/\033\[[0-9;]*[A-Za-z]//g' | tr -d '\001-\037'
 }
 
 # Draw one frame of the danmaku animation.
@@ -134,6 +134,7 @@ anim_danmaku_run() {
   _ANIM_FRAME=0
 
   ANIM_TERM_WIDTH="$(anim_term_width)"
+  [[ "${ANIM_TERM_WIDTH:-0}" -ge 1 ]] || ANIM_TERM_WIDTH=80
   DANMAKU_ROWS="${DANMAKU_ROWS:-6}"
 
   tput civis 2>/dev/null || true
