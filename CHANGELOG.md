@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [2.2.2] - 2026-04-13
+
+### Bug Fixes
+
+- Added missing `quick|steady` and `quick|cozy` message catalog entries across English, Chinese, Japanese, Korean, and Spanish so reachable quick moods no longer fall back to the generic message
+- Stabilized the quick cozy render regression assertion after review so the new coverage is less brittle
+
 ## [2.2.1] - 2026-04-12
 
 ### Bug Fixes
