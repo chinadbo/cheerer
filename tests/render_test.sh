@@ -137,7 +137,7 @@ test_render_quick_cozy_picks_catalog_row() {
   render_select_message
 
   assert_eq "en_quick_cozy_1" "$RENDER_MESSAGE_ID"
-  assert_contains "$RENDER_MESSAGE_TEXT" "warm and done"
+  assert_contains "$RENDER_MESSAGE_TEXT" "Quiet and warm"
 }
 
 test_render_solid_streak_picks_catalog_row() {
