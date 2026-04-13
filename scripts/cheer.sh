@@ -1,15 +1,13 @@
 #!/bin/bash
 set +e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+. "$SCRIPT_DIR/lib/config.sh"
+
 _cheer_load_config() {
-  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
-  if [[ -f "$CHEERER_DATA_DIR/config.sh" ]]; then
-    if grep -qE '^[[:space:]]*CHEERER_[A-Z_]+=' "$CHEERER_DATA_DIR/config.sh" 2>/dev/null; then
-      if ! grep -qvE '^[[:space:]]*(CHEERER_[A-Z_]+=.*|#.*|)[[:space:]]*$' "$CHEERER_DATA_DIR/config.sh" 2>/dev/null; then
-        . "$CHEERER_DATA_DIR/config.sh"
-      fi
-    fi
-  fi
+  config_ensure_data_dir
+  config_load_file "$(config_file_path)"
 }
 
 _cheer_check_enabled() {
@@ -25,15 +23,15 @@ _cheer_setup_tty() {
   fi
 }
 
-_cheer_parse_hook_event() {
+_cheer_read_hook_payload() {
+  HOOK_PAYLOAD=""
   local _raw
-  if read -r -t 1 _raw 2>/dev/null; then :; fi
-  HOOK_EVENT=$(printf '%s' "$_raw" | grep -o '"hook_event_name"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)
-  TASK_DURATION=$(printf '%s' "$_raw" | grep -o '"duration_seconds"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*$')
+  if read -r -t 1 _raw 2>/dev/null; then
+    HOOK_PAYLOAD="$_raw"
+  fi
 }
 
 _cheer_setup_dirs() {
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   CHEERER_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
   ANIM_DIR="$SCRIPT_DIR/animations"
   VOICE_DIR="$SCRIPT_DIR/voices"
@@ -42,27 +40,8 @@ _cheer_setup_dirs() {
 }
 
 _cheer_validate_config() {
-  CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
-  CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
-  CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
-  CHEERER_STYLE="${CHEERER_STYLE:-${CLAUDE_PLUGIN_OPTION_STYLE:-adaptive}}"
-  CHEERER_INTENSITY="${CHEERER_INTENSITY:-${CLAUDE_PLUGIN_OPTION_INTENSITY:-normal}}"
-  CHEERER_DUMB="${CHEERER_DUMB:-auto}"
-  CHEERER_MODE="${CHEERER_MODE:-auto}"
-  CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
-  CHEERER_EPIC_THRESHOLD="${CHEERER_EPIC_THRESHOLD:-60}"
-  CHEERER_EPIC="${CHEERER_EPIC:-false}"
-
-  case "$CHEERER_LANG" in zh|en|ja|ko|es) ;; *) CHEERER_LANG="zh" ;; esac
-  case "$CHEERER_STYLE" in adaptive|balanced|hype|cozy) ;; *) CHEERER_STYLE="adaptive" ;; esac
-  case "$CHEERER_INTENSITY" in soft|normal|high) ;; *) CHEERER_INTENSITY="normal" ;; esac
-  case "$CHEERER_MODE" in auto|full|text) ;; *) CHEERER_MODE="auto" ;; esac
-  case "$CHEERER_DUMB" in auto|true|false) ;; *) CHEERER_DUMB="auto" ;; esac
-
-  if [[ "$CHEERER_DUMB" == "auto" ]]; then
-    CHEERER_DUMB=false
-    [[ "${TERM:-}" == "dumb" ]] || [[ -z "${TERM:-}" ]] && CHEERER_DUMB=true
-  fi
+  config_apply_defaults
+  config_resolve_runtime_flags
 }
 
 _cheer_check_cooldown() {
@@ -109,25 +88,21 @@ _cheer_apply_anim_override() {
 _cheer_load_config
 _cheer_check_enabled
 _cheer_setup_tty
-_cheer_parse_hook_event
+_cheer_read_hook_payload
 _cheer_setup_dirs
 _cheer_validate_config
 
 . "$SCRIPT_DIR/lib/state.sh"
+. "$SCRIPT_DIR/lib/context.sh"
 . "$SCRIPT_DIR/lib/policy.sh"
 . "$SCRIPT_DIR/lib/render.sh"
 
 state_init
 CHEERER_FIRST_RUN="false"
 [[ "${STATS_TOTAL_TRIGGERS:-0}" -eq 0 ]] && CHEERER_FIRST_RUN="true"
-CURRENT_TS=$(date +%s 2>/dev/null || echo 0)
-CURRENT_ISO=$(date -Iseconds 2>/dev/null || date)
-export CHEERER_HOUR="${CHEERER_HOUR:-$(date +%H 2>/dev/null || echo 12)}"
 export CHEERER_ANIM_DURATION="${CHEERER_ANIM_DURATION:-}"
-RECENT_TASKCOMPLETED_COUNT=$(state_recent_count $((CURRENT_TS - 300)) "TaskCompleted")
-SESSION_STREAK=$(state_recent_count $((CURRENT_TS - 1800)) "TaskCompleted")
-RECENT_ANIMATIONS="$(state_recent_values_csv 6 3)"
-RECENT_MESSAGE_IDS="$(state_recent_values_csv 7 3)"
+context_build_runtime "$HOOK_PAYLOAD"
+context_publish
 
 _cheer_check_cooldown
 _cheer_check_epic
