@@ -17,14 +17,26 @@ case "${1:-all}" in
   integration)
     bash tests/integration_test.sh
     ;;
+  config)
+    bash tests/config_test.sh
+    ;;
+  context)
+    bash tests/context_test.sh
+    ;;
+  ci)
+    bash tests/ci_test.sh
+    ;;
   all)
     bash tests/state_test.sh
     bash tests/policy_test.sh
     bash tests/render_test.sh
     bash tests/integration_test.sh
+    bash tests/config_test.sh
+    bash tests/context_test.sh
+    bash tests/ci_test.sh
     ;;
   *)
-    echo "usage: bash tests/run.sh [state|policy|render|integration|all]"
+    echo "usage: bash tests/run.sh [state|policy|render|integration|config|context|ci|all]"
     exit 1
     ;;
 esac

@@ -1,6 +1,8 @@
 #!/bin/bash
 SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
+. "$SCRIPT_DIR/scripts/lib/config.sh"
+
 if [[ "${1:-}" == "--epic" ]]; then
   export CHEERER_ANIM=epic
   shift
@@ -12,16 +14,14 @@ if [[ "${1:-}" == "--version" ]]; then
 fi
 
 if [[ "${1:-}" == "--disable" ]]; then
-  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
-  mkdir -p "$CHEERER_DATA_DIR"
-  printf 'CHEERER_ENABLED=false\n' > "$CHEERER_DATA_DIR/config.sh"
+  config_ensure_data_dir
+  printf 'CHEERER_ENABLED=false\n' > "$(config_file_path)"
   echo "cheerer disabled. Run 'cheer --enable' to re-enable."
   exit 0
 fi
 
 if [[ "${1:-}" == "--enable" ]]; then
-  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
-  rm -f "$CHEERER_DATA_DIR/config.sh"
+  rm -f "$(config_file_path)"
   echo "cheerer enabled."
   exit 0
 fi
@@ -66,39 +66,21 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
 fi
 
 _cheerer_config() {
-  CHEERER_ENABLED="${CHEERER_ENABLED:-true}"
-  CHEERER_LANG="${CHEERER_LANG:-${CLAUDE_PLUGIN_OPTION_LANG:-zh}}"
-  CHEERER_ANIM="${CHEERER_ANIM:-${CLAUDE_PLUGIN_OPTION_ANIM:-random}}"
-  CHEERER_VOICE="${CHEERER_VOICE:-${CLAUDE_PLUGIN_OPTION_VOICE:-on}}"
-  CHEERER_STYLE="${CHEERER_STYLE:-${CLAUDE_PLUGIN_OPTION_STYLE:-adaptive}}"
-  CHEERER_INTENSITY="${CHEERER_INTENSITY:-${CLAUDE_PLUGIN_OPTION_INTENSITY:-normal}}"
-  CHEERER_MODE="${CHEERER_MODE:-auto}"
-  CHEERER_COOLDOWN="${CHEERER_COOLDOWN:-3}"
-  CHEERER_ANIM_DURATION="${CHEERER_ANIM_DURATION:-30}"
-  CHEERER_EPIC="${CHEERER_EPIC:-false}"
-  CHEERER_EPIC_THRESHOLD="${CHEERER_EPIC_THRESHOLD:-60}"
+  config_load_file "$(config_file_path)"
+  config_apply_defaults
 
   echo ""
   echo "  cheerer — Current Configuration"
   echo ""
-  printf "  CHEERER_ENABLED=%s\n" "$CHEERER_ENABLED"
-  printf "  CHEERER_LANG=%s\n" "$CHEERER_LANG"
-  printf "  CHEERER_ANIM=%s\n" "$CHEERER_ANIM"
-  printf "  CHEERER_VOICE=%s\n" "$CHEERER_VOICE"
-  printf "  CHEERER_STYLE=%s\n" "$CHEERER_STYLE"
-  printf "  CHEERER_INTENSITY=%s\n" "$CHEERER_INTENSITY"
-  printf "  CHEERER_MODE=%s\n" "$CHEERER_MODE"
-  printf "  CHEERER_COOLDOWN=%s\n" "$CHEERER_COOLDOWN"
-  printf "  CHEERER_ANIM_DURATION=%s\n" "$CHEERER_ANIM_DURATION"
-  printf "  CHEERER_EPIC=%s\n" "$CHEERER_EPIC"
-  printf "  CHEERER_EPIC_THRESHOLD=%s\n" "$CHEERER_EPIC_THRESHOLD"
+  config_print_current
   echo ""
 
-  local config_file="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}/config.sh"
-  if [[ -f "$config_file" ]]; then
-    printf "  Config file: %s (active)\n" "$config_file"
+  local _cfg_file
+  _cfg_file="$(config_file_path)"
+  if [[ -f "$_cfg_file" ]]; then
+    printf "  Config file: %s (active)\n" "$_cfg_file"
   else
-    printf "  Config file: %s (not found)\n" "$config_file"
+    printf "  Config file: %s (not found)\n" "$_cfg_file"
   fi
   echo ""
   exit 0
@@ -109,7 +91,7 @@ if [[ "${1:-}" == "--config" ]]; then
 fi
 
 _cheerer_stats() {
-  CHEERER_DATA_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.config/cheerer}"
+  config_ensure_data_dir
   STATS_FILE="$CHEERER_DATA_DIR/stats.json"
   HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
 

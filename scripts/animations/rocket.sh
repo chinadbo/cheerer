@@ -4,7 +4,7 @@
 
 ANIM_LIB="$(dirname "${BASH_SOURCE[0]}")/../lib/animation.sh"
 if [[ ! -f "$ANIM_LIB" ]]; then
-  printf '🎉 %s\n' "${CHEERER_MESSAGE:-Great work!}"
+  printf '🎉 %s\n' "$(printf '%s' "${CHEERER_MESSAGE:-Great work!}" | sed $'s/\033\[[0-9;]*[A-Za-z]//g' | tr -d '\001-\037')"
   exit 0
 fi
 . "$ANIM_LIB"
@@ -19,5 +19,10 @@ DANMAKU_TEXT=(  "🚀 3...2...1..."  "▸▸▸ Liftoff! ▸▸▸"   "🚀 $MSG
 DANMAKU_COLOR=($'\033[31m'         $'\033[38;5;208m'     $'\033[1;96m' $'\033[33m'             $'\033[97m'        $'\033[31m'        )
 DANMAKU_SPEED=(2                   4                     2            3                         3                  5                  )
 DANMAKU_DELAY=(0                   5                     2            8                         12                 3                  )
+
+if ! anim_validate_theme; then
+  anim_fallback_plain
+  exit 0
+fi
 
 anim_danmaku_run

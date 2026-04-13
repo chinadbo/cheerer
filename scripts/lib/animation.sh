@@ -41,6 +41,32 @@ anim_sanitize_msg() {
   printf '%s' "$raw" | sed $'s/\033\[[0-9;]*[A-Za-z]//g' | tr -d '\001-\037'
 }
 
+anim_validate_theme() {
+  local expected="${DANMAKU_ROWS:-0}"
+  local i row
+
+  [[ "$expected" =~ ^[0-9]+$ ]] || return 1
+  [[ "$expected" -ge 1 ]] || return 1
+  [[ "${#DANMAKU_ROW[@]}" -eq "$expected" ]] || return 1
+  [[ "${#DANMAKU_TEXT[@]}" -eq "$expected" ]] || return 1
+  [[ "${#DANMAKU_COLOR[@]}" -eq "$expected" ]] || return 1
+  [[ "${#DANMAKU_SPEED[@]}" -eq "$expected" ]] || return 1
+  [[ "${#DANMAKU_DELAY[@]}" -eq "$expected" ]] || return 1
+
+  for ((i=0; i<expected; i++)); do
+    row="${DANMAKU_ROW[$i]}"
+    [[ "$row" =~ ^[0-9]+$ ]] || return 1
+    [[ "$row" -ge 1 ]] || return 1
+    [[ "$row" -le "$expected" ]] || return 1
+  done
+}
+
+anim_fallback_plain() {
+  local plain="${CHEERER_MESSAGE:-Great work!}"
+  plain="$(anim_sanitize_msg "$plain")"
+  printf '🎉 %s\n' "$plain"
+}
+
 # Draw one frame of the danmaku animation.
 # Reads DANMAKU_* arrays and _ANIM_FRAME counter.
 # NOTE: only one stream is rendered per row per frame (rightmost visible wins).

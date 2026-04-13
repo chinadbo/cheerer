@@ -31,7 +31,9 @@ run_epic_probe() {
 
   mkdir -p "$app_root/scripts/lib" "$app_root/scripts/animations" "$app_root/scripts/voices" "$app_root/scripts/messages" "$bin_dir"
   cp scripts/cheer.sh "$app_root/scripts/cheer.sh"
+  cp scripts/lib/config.sh "$app_root/scripts/lib/config.sh"
   cp scripts/lib/state.sh "$app_root/scripts/lib/state.sh"
+  cp scripts/lib/context.sh "$app_root/scripts/lib/context.sh"
   cp scripts/lib/policy.sh "$app_root/scripts/lib/policy.sh"
   cp scripts/lib/render.sh "$app_root/scripts/lib/render.sh"
   cp scripts/messages/catalog_en.tsv "$app_root/scripts/messages/catalog_en.tsv"
@@ -264,6 +266,31 @@ test_danmaku_library_graceful_fallback() {
   rm -rf "$tmp_dir"
 }
 
+test_danmaku_library_graceful_fallback_sanitizes_message() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+  cp scripts/animations/dance.sh "$tmp_dir/dance.sh"
+  output="$(CHEERER_MESSAGE=$'Fallback\033[2JCheck' bash "$tmp_dir/dance.sh" 2>&1)"
+  assert_contains "$output" "Fallback" || return 1
+  assert_contains "$output" "Check" || return 1
+  assert_not_contains "$output" $'\033' || return 1
+  assert_not_contains "$output" '[2J' || return 1
+  rm -rf "$tmp_dir"
+}
+
+test_ci_suite_runs_outside_repo_root() {
+  local tmp_dir root_dir output
+  tmp_dir="$(make_tmp_dir)"
+  root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+  if ! output="$(cd "$tmp_dir" && bash "$root_dir/tests/ci_test.sh" 2>&1)"; then
+    printf '%s\n' "$output"
+    return 1
+  fi
+
+  assert_contains "$output" "0 failed" || return 1
+}
+
 run_test "stop_fixture_uses_quick_message" test_stop_fixture_uses_quick_message
 run_test "long_task_fixture_uses_big_message" test_long_task_fixture_uses_big_message
 run_test "corrupt_stats_still_exits_zero" test_corrupt_stats_still_exits_zero
@@ -282,6 +309,8 @@ run_test "danmaku_animation_contains_message" test_danmaku_animation_contains_me
 run_test "danmaku_message_sanitizes_control_chars" test_danmaku_message_sanitizes_control_chars
 run_test "danmaku_narrow_terminal_exits_cleanly" test_danmaku_narrow_terminal_exits_cleanly
 run_test "danmaku_library_graceful_fallback" test_danmaku_library_graceful_fallback
+run_test "danmaku_library_graceful_fallback_sanitizes_message" test_danmaku_library_graceful_fallback_sanitizes_message
+run_test "ci_suite_runs_outside_repo_root" test_ci_suite_runs_outside_repo_root
 
 test_cooldown_does_not_reset_timer() {
   local tmp_dir output1 output2
@@ -576,4 +605,58 @@ test_milestone_message_truncated_at_sixty() {
 
 run_test "invalid_anim_falls_back_to_random" test_invalid_anim_falls_back_to_random
 run_test "milestone_message_truncated_at_sixty" test_milestone_message_truncated_at_sixty
+
+test_anim_validate_theme_rejects_mismatched_arrays() {
+  . scripts/lib/animation.sh
+
+  declare -F anim_validate_theme >/dev/null || {
+    printf 'anim_validate_theme missing\n'
+    return 1
+  }
+
+  DANMAKU_ROWS=2
+  DANMAKU_ROW=(1 2)
+  DANMAKU_TEXT=("only-one")
+  DANMAKU_COLOR=($'\033[32m' $'\033[33m')
+  DANMAKU_SPEED=(1 1)
+  DANMAKU_DELAY=(0 0)
+
+  if anim_validate_theme; then
+    printf 'expected invalid theme to be rejected\n'
+    return 1
+  fi
+}
+
+test_invalid_theme_falls_back_to_plain_output() {
+  local tmp_dir theme_file output
+  tmp_dir="$(make_tmp_dir)"
+  theme_file="$tmp_dir/bad-theme.sh"
+
+  cat > "$theme_file" <<EOF
+#!/bin/bash
+ANIM_LIB="$PWD/scripts/lib/animation.sh"
+. "\$ANIM_LIB"
+MSG="\$(anim_sanitize_msg "\${CHEERER_MESSAGE:-Great work!}")"
+DANMAKU_ROWS=2
+DANMAKU_ROW=(1 2)
+DANMAKU_TEXT=("🎉 \$MSG")
+DANMAKU_COLOR=($'\033[32m')
+DANMAKU_SPEED=(2 2)
+DANMAKU_DELAY=(0 0)
+if ! anim_validate_theme; then
+  anim_fallback_plain
+  exit 0
+fi
+anim_danmaku_run
+EOF
+
+  chmod +x "$theme_file"
+  output="$(CHEERER_MESSAGE="PlanFallback123" bash "$theme_file" 2>&1)"
+
+  assert_contains "$output" "PlanFallback123"
+  assert_not_contains "$output" "command not found"
+}
+
+run_test "anim_validate_theme_rejects_mismatched_arrays" test_anim_validate_theme_rejects_mismatched_arrays
+run_test "invalid_theme_falls_back_to_plain_output" test_invalid_theme_falls_back_to_plain_output
 finish_tests
