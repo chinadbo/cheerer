@@ -108,6 +108,38 @@ test_render_quick_hype_picks_catalog_row() {
   assert_contains "$RENDER_MESSAGE_TEXT" "spark alive"
 }
 
+test_render_quick_steady_picks_catalog_row() {
+  CHEERER_ROOT="$PWD"
+  CHEERER_LANG="en"
+  POLICY_TIER="quick"
+  POLICY_MOOD="steady"
+  RECENT_MESSAGE_IDS=""
+  STATE_MILESTONE_MSG=""
+  CHEERER_CUSTOM_ONLY="false"
+  CHEERER_CUSTOM_MSG=""
+
+  render_select_message
+
+  assert_eq "en_quick_steady_1" "$RENDER_MESSAGE_ID"
+  assert_contains "$RENDER_MESSAGE_TEXT" "Consistent pace"
+}
+
+test_render_quick_cozy_picks_catalog_row() {
+  CHEERER_ROOT="$PWD"
+  CHEERER_LANG="en"
+  POLICY_TIER="quick"
+  POLICY_MOOD="cozy"
+  RECENT_MESSAGE_IDS=""
+  STATE_MILESTONE_MSG=""
+  CHEERER_CUSTOM_ONLY="false"
+  CHEERER_CUSTOM_MSG=""
+
+  render_select_message
+
+  assert_eq "en_quick_cozy_1" "$RENDER_MESSAGE_ID"
+  assert_contains "$RENDER_MESSAGE_TEXT" "Quiet and warm"
+}
+
 test_render_solid_streak_picks_catalog_row() {
   CHEERER_ROOT="$PWD"
   CHEERER_LANG="en"
@@ -214,6 +246,8 @@ run_test "soft_intensity_skips_quick_animation" test_soft_intensity_skips_quick_
 run_test "epic_mode_animates_all_three" test_epic_mode_animates_all_three
 run_test "render_solid_rapid_fire_picks_catalog_row" test_render_solid_rapid_fire_picks_catalog_row
 run_test "render_quick_hype_picks_catalog_row" test_render_quick_hype_picks_catalog_row
+run_test "render_quick_steady_picks_catalog_row" test_render_quick_steady_picks_catalog_row
+run_test "render_quick_cozy_picks_catalog_row" test_render_quick_cozy_picks_catalog_row
 run_test "render_solid_streak_picks_catalog_row" test_render_solid_streak_picks_catalog_row
 run_test "render_solid_triumphant_picks_catalog_row" test_render_solid_triumphant_picks_catalog_row
 run_test "render_custom_only_uses_custom_file" test_render_custom_only_uses_custom_file
