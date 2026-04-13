@@ -100,7 +100,7 @@ _cheer_validate_config
 state_init
 CHEERER_FIRST_RUN="false"
 [[ "${STATS_TOTAL_TRIGGERS:-0}" -eq 0 ]] && CHEERER_FIRST_RUN="true"
-export CHEERER_ANIM_DURATION="${CHEERER_ANIM_DURATION:-}"
+export CHEERER_ANIM_DURATION
 context_build_runtime "$HOOK_PAYLOAD"
 context_publish
 

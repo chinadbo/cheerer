@@ -278,6 +278,19 @@ test_danmaku_library_graceful_fallback_sanitizes_message() {
   rm -rf "$tmp_dir"
 }
 
+test_ci_suite_runs_outside_repo_root() {
+  local tmp_dir root_dir output
+  tmp_dir="$(make_tmp_dir)"
+  root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+  if ! output="$(cd "$tmp_dir" && bash "$root_dir/tests/ci_test.sh" 2>&1)"; then
+    printf '%s\n' "$output"
+    return 1
+  fi
+
+  assert_contains "$output" "0 failed" || return 1
+}
+
 run_test "stop_fixture_uses_quick_message" test_stop_fixture_uses_quick_message
 run_test "long_task_fixture_uses_big_message" test_long_task_fixture_uses_big_message
 run_test "corrupt_stats_still_exits_zero" test_corrupt_stats_still_exits_zero
@@ -297,6 +310,7 @@ run_test "danmaku_message_sanitizes_control_chars" test_danmaku_message_sanitize
 run_test "danmaku_narrow_terminal_exits_cleanly" test_danmaku_narrow_terminal_exits_cleanly
 run_test "danmaku_library_graceful_fallback" test_danmaku_library_graceful_fallback
 run_test "danmaku_library_graceful_fallback_sanitizes_message" test_danmaku_library_graceful_fallback_sanitizes_message
+run_test "ci_suite_runs_outside_repo_root" test_ci_suite_runs_outside_repo_root
 
 test_cooldown_does_not_reset_timer() {
   local tmp_dir output1 output2
