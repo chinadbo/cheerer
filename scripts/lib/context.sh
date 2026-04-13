@@ -3,6 +3,7 @@
 # context.sh — runtime context module for cheerer
 # Parses the hook payload, builds runtime context from history, and
 # publishes backwards-compatible globals consumed by policy/render.
+# Requires: state.sh must be sourced before calling context_build_runtime.
 
 # Internal CTX_* vars — reset before each parse/build cycle.
 context_reset() {
@@ -47,8 +48,8 @@ context_build_runtime() {
 
   context_reset
   context_parse_hook_payload "$payload"
-  CTX_RECENT_TASKCOMPLETED_COUNT=$(state_recent_count $((CTX_CURRENT_TS - 300)) "TaskCompleted")
-  CTX_SESSION_STREAK=$(state_recent_count $((CTX_CURRENT_TS - 1800)) "TaskCompleted")
+  CTX_RECENT_TASKCOMPLETED_COUNT="$(state_recent_count $((CTX_CURRENT_TS - 300)) "TaskCompleted")"
+  CTX_SESSION_STREAK="$(state_recent_count $((CTX_CURRENT_TS - 1800)) "TaskCompleted")"
   CTX_RECENT_ANIMATIONS="$(state_recent_values_csv 6 3)"
   CTX_RECENT_MESSAGE_IDS="$(state_recent_values_csv 7 3)"
 }
