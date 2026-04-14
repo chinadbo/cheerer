@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [2.2.3] - 2026-04-14
+
+### Refactoring
+
+- Centralized config loading and normalization in `scripts/lib/config.sh`, making runtime defaults deterministic and rejecting unsafe config lines before sourcing
+- Introduced `scripts/lib/context.sh` to build and publish explicit runtime context from hook payloads and recent history instead of relying on implicit globals
+- Validated danmaku theme contracts before animation runs and fell back to plain output when themes are invalid, preventing broken animation rendering paths
+
+### Tests
+
+- Added dedicated `config`, `context`, and `ci` shell suites and made GitHub Actions run the full `bash tests/run.sh all` matrix
+- Added a cwd-independent regression for `tests/ci_test.sh` and a guardrail preventing `scripts/cheer.sh` from re-defaulting `CHEERER_ANIM_DURATION` after config normalization
+
 ## [2.2.2] - 2026-04-13
 
 ### Bug Fixes
