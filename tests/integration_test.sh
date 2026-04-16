@@ -545,6 +545,7 @@ test_config_flag_shows_defaults() {
   local output
   output="$(bash bin/cheer --config 2>&1)"
   assert_contains "$output" "CHEERER_LANG=zh"
+  assert_contains "$output" "CHEERER_VOICE=off"
   assert_contains "$output" "CHEERER_COOLDOWN=3"
   assert_contains "$output" "CHEERER_ANIM_DURATION=30"
 }
