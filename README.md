@@ -6,7 +6,7 @@
 
 **Language:** English | [中文](README.zh.md) | [日本語](README.ja.md)
 
-Whenever Claude Code finishes a task, cheerer plays a danmaku (bullet-screen) floating-subtitle animation and a multilingual voice encouragement to make coding more fun.
+Whenever Claude Code finishes a task, cheerer plays a danmaku (bullet-screen) floating-subtitle animation and a contextual encouragement message to make coding more fun. Voice output is available and can be enabled when you want spoken encouragement.
 
 ## ✨ Features
 
@@ -122,12 +122,14 @@ If Claude Code prompts for plugin settings during `/plugin enable cheerer`, you 
 /plugin enable cheerer
 > Voice language (zh / en / ja): zh
 > Animation style (random / basketball / dance / fireworks / epic): random
-> Enable voice output (on / off): on
+> Enable voice output (on / off): off
 > Celebration style (adaptive / balanced / hype / cozy): adaptive
 > Celebration intensity (soft / normal / high): normal
 ```
 
 If no prompt appears, set the same values with environment variables instead.
+
+Voice is opt-in on fresh installs. Leave CHEERER_VOICE unset (or set it to off) to keep cheerer text-first, and set it to on when you want spoken encouragement.
 
 ### Option 2: Environment variables
 
@@ -138,7 +140,7 @@ Set in your shell profile (`~/.bashrc`, `~/.zshrc`) or `.claude/settings.json`:
 | `CHEERER_ENABLED` | Master switch | `true` / `false` | `true` |
 | `CHEERER_LANG` | Voice language | `zh` / `en` / `ja` / `ko` / `es` | `zh` |
 | `CHEERER_ANIM` | Animation style | `basketball` / `dance` / `fireworks` / `rocket` / `trophy` / `wave` / `epic` / `random` | `random` |
-| `CHEERER_VOICE` | Voice output | `on` / `off` / `true` / `false` | `on` |
+| `CHEERER_VOICE` | Voice output | `on` / `off` / `true` / `false` | `off` |
 | `CHEERER_DUMB` | Force text-only fallback or keep auto-detect | `auto` / `true` / `false` | `auto` |
 | `CHEERER_MODE` | Output mode | `auto` / `full` / `text` | `auto` |
 | `CHEERER_COOLDOWN` | Cooldown between triggers (seconds) | positive integer | `3` |

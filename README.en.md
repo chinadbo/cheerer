@@ -4,7 +4,7 @@
 ![Shell](https://img.shields.io/badge/Shell-Bash-89e051?logo=gnu-bash&logoColor=white)
 ![GitHub Repo stars](https://img.shields.io/github/stars/chinadbo/cheerer?style=social)
 
-Whenever Claude Code finishes a task, cheerer plays a danmaku (bullet-screen) floating-subtitle animation and a multilingual voice encouragement to make coding more fun.
+Whenever Claude Code finishes a task, cheerer plays a danmaku (bullet-screen) floating-subtitle animation and a contextual encouragement message to make coding more fun. Voice output is available and can be enabled when you want spoken encouragement.
 
 ## ✨ Features
 
@@ -160,7 +160,7 @@ bash scripts/voices/cheer_ja.sh
 | `CHEERER_ENABLED` | Master switch | `true` / `false` | `true` |
 | `CHEERER_LANG` | Voice language | `zh` / `en` / `ja` / `ko` / `es` | `zh` |
 | `CHEERER_ANIM` | Animation style | `basketball` / `dance` / `fireworks` / `rocket` / `trophy` / `wave` / `epic` / `random` | `random` |
-| `CHEERER_VOICE` | Enable or disable voice | `on` / `off` / `true` / `false` | `on` |
+| `CHEERER_VOICE` | Enable or disable voice | `on` / `off` / `true` / `false` | `off` |
 | `CHEERER_DUMB` | Force text-only fallback or keep auto-detect | `auto` / `true` / `false` | `auto` |
 | `CHEERER_MODE` | Output mode | `auto` / `full` / `text` | `auto` |
 | `CHEERER_COOLDOWN` | Cooldown seconds between triggers | positive integer | `3` |
@@ -171,6 +171,8 @@ bash scripts/voices/cheer_ja.sh
 | `CHEERER_INTENSITY` | Celebration energy | `soft` / `normal` / `high` | `normal` |
 
 `CHEERER_*` env vars override plugin settings.
+
+Voice is opt-in on fresh installs. Leave CHEERER_VOICE unset (or set it to off) to keep cheerer text-first, and set it to on when you want spoken encouragement.
 
 ### Runtime behavior
 

@@ -49,7 +49,7 @@ Environment variables:
   CHEERER_ENABLED        Master switch (true/false, default: true)
   CHEERER_LANG           Voice language (zh/en/ja/ko/es, default: zh)
   CHEERER_ANIM           Animation style (random/[name]/epic, default: random)
-  CHEERER_VOICE          Voice output (on/off, default: on)
+  CHEERER_VOICE          Voice output (on/off, default: off)
   CHEERER_STYLE          Celebration style (adaptive/balanced/hype/cozy)
   CHEERER_INTENSITY      Intensity (soft/normal/high)
   CHEERER_MODE           Output mode (auto/full/text)
