@@ -731,4 +731,41 @@ run_test "doctor_cli_reports_missing_optional_file_as_warn" test_doctor_cli_repo
 run_test "doctor_cli_exits_non_zero_for_invalid_animation" test_doctor_cli_exits_non_zero_for_invalid_animation
 run_test "why_cli_explains_short_task_fixture" test_why_cli_explains_short_task_fixture
 run_test "why_cli_uses_installed_plugin_root_resolution" test_why_cli_uses_installed_plugin_root_resolution
+
+test_shared_voice_script_defaults_off_when_unset() {
+  local tmp_dir bin_dir output
+  tmp_dir="$(make_tmp_dir)"
+  bin_dir="$tmp_dir/bin"
+  mkdir -p "$bin_dir"
+
+  printf '#!/bin/bash\nprintf "say-called\\n" >> "%s"\n' "$tmp_dir/voice.log" > "$bin_dir/say"
+  chmod +x "$bin_dir/say"
+
+  output="$(PATH="$bin_dir:$PATH" CHEERER_LANG="en" CHEERER_DUMB="true" bash scripts/voices/cheer.sh)"
+
+  assert_contains "$output" "🎉 Great work. Task complete."
+  [[ ! -f "$tmp_dir/voice.log" ]] || return 1
+}
+
+test_shared_voice_script_respects_explicit_on() {
+  local tmp_dir bin_dir i
+  tmp_dir="$(make_tmp_dir)"
+  bin_dir="$tmp_dir/bin"
+  mkdir -p "$bin_dir"
+
+  printf '#!/bin/bash\nprintf "say-called\\n" > "%s"\n' "$tmp_dir/voice.log" > "$bin_dir/say"
+  chmod +x "$bin_dir/say"
+
+  PATH="$bin_dir:$PATH" CHEERER_LANG="en" CHEERER_DUMB="true" CHEERER_VOICE="on" bash scripts/voices/cheer.sh >/dev/null
+
+  sleep 1
+  for i in 1 2 3 4 5; do
+    [[ -f "$tmp_dir/voice.log" ]] && break
+  done
+
+  [[ -f "$tmp_dir/voice.log" ]] || return 1
+}
+
+run_test "shared_voice_script_defaults_off_when_unset" test_shared_voice_script_defaults_off_when_unset
+run_test "shared_voice_script_respects_explicit_on" test_shared_voice_script_respects_explicit_on
 finish_tests
