@@ -659,4 +659,75 @@ EOF
 
 run_test "anim_validate_theme_rejects_mismatched_arrays" test_anim_validate_theme_rejects_mismatched_arrays
 run_test "invalid_theme_falls_back_to_plain_output" test_invalid_theme_falls_back_to_plain_output
+
+test_doctor_cli_reports_missing_optional_file_as_warn() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    bash bin/cheer --doctor 2>&1)"
+
+  assert_contains "$output" 'cheerer — Doctor'
+  assert_contains "$output" 'WARN custom messages file not found'
+}
+
+test_doctor_cli_exits_non_zero_for_invalid_animation() {
+  local tmp_dir output status
+  tmp_dir="$(make_tmp_dir)"
+
+  set +e
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CHEERER_LANG="en" \
+    CHEERER_ANIM="missing" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    bash bin/cheer --doctor 2>&1)"
+  status=$?
+  set -e
+
+  assert_eq "1" "$status"
+  assert_contains "$output" "FAIL configured animation 'missing' missing script"
+}
+
+test_why_cli_explains_short_task_fixture() {
+  local tmp_dir output
+  tmp_dir="$(make_tmp_dir)"
+
+  output="$(CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    bash bin/cheer --why < tests/fixtures/taskcompleted-short.json 2>&1)"
+
+  assert_contains "$output" 'cheerer — Why'
+  assert_contains "$output" 'Hook event: TaskCompleted'
+  assert_contains "$output" '- tier: solid'
+  assert_contains "$output" 'Reasoning:'
+}
+
+test_why_cli_uses_installed_plugin_root_resolution() {
+  local tmp_dir app_root output
+  tmp_dir="$(make_tmp_dir)"
+  app_root="$tmp_dir/installed"
+  mkdir -p "$app_root"
+  cp -R bin scripts package.json "$app_root/"
+
+  output="$(CLAUDE_PLUGIN_ROOT="$app_root" \
+    CLAUDE_PLUGIN_DATA="$tmp_dir/data" \
+    CHEERER_LANG="en" \
+    CHEERER_VOICE="off" \
+    CHEERER_DUMB="true" \
+    bash "$app_root/bin/cheer" --why < tests/fixtures/taskcompleted-short.json 2>&1)"
+
+  assert_contains "$output" 'cheerer — Why'
+  assert_contains "$output" '- message_id: '
+}
+
+run_test "doctor_cli_reports_missing_optional_file_as_warn" test_doctor_cli_reports_missing_optional_file_as_warn
+run_test "doctor_cli_exits_non_zero_for_invalid_animation" test_doctor_cli_exits_non_zero_for_invalid_animation
+run_test "why_cli_explains_short_task_fixture" test_why_cli_explains_short_task_fixture
+run_test "why_cli_uses_installed_plugin_root_resolution" test_why_cli_uses_installed_plugin_root_resolution
 finish_tests

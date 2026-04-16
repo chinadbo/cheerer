@@ -163,6 +163,8 @@ Set in your shell profile (`~/.bashrc`, `~/.zshrc`) or `.claude/settings.json`:
 - `CHEERER_INTENSITY=soft` keeps quick wins lighter; `high` makes celebration output more energetic, including animated `Stop` hooks in `CHEERER_MODE=auto`.
 - Messages are selected from per-language catalogs and avoid immediate repeats when possible.
 
+Built-in locale catalogs are validated in tests so every supported language keeps the same reachable celebration coverage for the current policy rules. If a locale loses a required `(tier, mood)` path, the test suite fails before release.
+
 ## 🚀 Direct usage
 
 From a repo checkout:
@@ -182,14 +184,29 @@ bash bin/cheer --epic
 bash bin/cheer --stats
 bash bin/cheer --preview
 bash bin/cheer --list
+bash bin/cheer --doctor
+bash bin/cheer --why < tests/fixtures/taskcompleted-short.json
 ```
 
-`bin/cheer` supports four flags:
+`bin/cheer` supports six flags:
 
 - `--epic` — force epic mode (plays all six animations in sequence)
 - `--stats` — print total triggers, milestones reached, and last trigger time
 - `--preview [name]` — play an animation without a hook trigger; `name` is optional (random if omitted)
 - `--list` — list all available animations and languages
+- `--doctor` — run read-only install/runtime/config diagnostics; exits non-zero when any hard failure is found
+- `--why` — explain the current celebration decision in plain text without animation, voice, or state mutation
+
+## Diagnostics
+
+`cheer --doctor` prints grouped `PASS`, `WARN`, and `FAIL` lines for config safety, runtime mode resolution, assets, catalogs, and optional user files.
+
+- Exit code `0`: only `PASS` / `WARN`
+- Exit code non-zero: one or more `FAIL` lines
+
+`cheer --why` explains a single celebration decision in plain text. It reads the same hook JSON payload as the normal runtime path, or uses a deterministic short-task probe when stdin is empty.
+
+Both commands are read-only diagnostic paths: they do not append history, update stats, write cooldown state, play animation, or emit voice.
 
 ## Testing
 

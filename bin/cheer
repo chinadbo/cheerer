@@ -38,6 +38,8 @@ Flags:
   --preview [name]  Preview an animation (random if name omitted)
   --list            List available animations and languages
   --config          Show current configuration
+  --doctor          Run read-only diagnostics and report PASS/WARN/FAIL
+  --why             Explain what cheerer would do for a given payload (read-only)
   --disable         Disable cheerer (persists across sessions)
   --enable          Re-enable cheerer
   --version         Print version
@@ -88,6 +90,69 @@ _cheerer_config() {
 
 if [[ "${1:-}" == "--config" ]]; then
   _cheerer_config
+fi
+
+_cheerer_doctor() {
+  . "$SCRIPT_DIR/scripts/lib/catalog.sh"
+  . "$SCRIPT_DIR/scripts/lib/doctor.sh"
+
+  config_load_file "$(config_file_path)"
+  config_apply_defaults
+  config_resolve_runtime_flags
+
+  CHEERER_DATA_DIR="$(config_data_dir)"
+  CHEERER_ROOT="$SCRIPT_DIR"
+  ANIM_DIR="$SCRIPT_DIR/scripts/animations"
+  VOICE_DIR="$SCRIPT_DIR/scripts/voices"
+
+  doctor_reset
+  doctor_check_config
+  doctor_check_runtime
+  doctor_check_assets
+  doctor_check_catalog
+  doctor_check_optional_files
+  doctor_print_report
+
+  local _ec
+  _ec="$(doctor_exit_code)"
+  exit "$_ec"
+}
+
+if [[ "${1:-}" == "--doctor" ]]; then
+  _cheerer_doctor
+fi
+
+_cheerer_why() {
+  . "$SCRIPT_DIR/scripts/lib/state.sh"
+  . "$SCRIPT_DIR/scripts/lib/context.sh"
+  . "$SCRIPT_DIR/scripts/lib/policy.sh"
+  . "$SCRIPT_DIR/scripts/lib/render.sh"
+  . "$SCRIPT_DIR/scripts/lib/catalog.sh"
+  . "$SCRIPT_DIR/scripts/lib/explain.sh"
+
+  config_load_file "$(config_file_path)"
+  config_apply_defaults
+  config_resolve_runtime_flags
+
+  CHEERER_DATA_DIR="$(config_data_dir)"
+  CHEERER_ROOT="$SCRIPT_DIR"
+  ANIM_DIR="$SCRIPT_DIR/scripts/animations"
+  VOICE_DIR="$SCRIPT_DIR/scripts/voices"
+  HISTORY_FILE="$CHEERER_DATA_DIR/history.log"
+  STATS_FILE="$CHEERER_DATA_DIR/stats.json"
+
+  # Read optional payload from stdin (non-blocking, 1s timeout)
+  local _why_payload=""
+  if read -r -t 1 _why_payload 2>/dev/null; then
+    :
+  fi
+
+  explain_run "${_why_payload:-}"
+  exit 0
+}
+
+if [[ "${1:-}" == "--why" ]]; then
+  _cheerer_why
 fi
 
 _cheerer_stats() {
