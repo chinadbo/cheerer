@@ -27,23 +27,39 @@ config_file_path() {
 # Safe value characters: letters, digits, and _-./: @ space only.
 # This explicitly blocks inline command injection such as:
 #   CHEERER_LANG=en; rm -rf /
+#
+# Side effect: sets CONFIG_LOAD_STATUS to one of:
+#   missing   — file does not exist
+#   ignored   — file exists but failed safety checks
+#   accepted  — file was sourced successfully
 # ---------------------------------------------------------------------------
+CONFIG_LOAD_STATUS="missing"
+
 config_load_file() {
   local _file="${1:-}"
+  CONFIG_LOAD_STATUS="missing"
   [[ -n "$_file" ]] || return 0
-  [[ -f "$_file" ]] || return 0
+  if [[ ! -f "$_file" ]]; then
+    CONFIG_LOAD_STATUS="missing"
+    return 0
+  fi
 
   # Must have at least one CHEERER_*= line
-  grep -qE '^[[:space:]]*CHEERER_[A-Z_]+=' "$_file" 2>/dev/null || return 0
+  if ! grep -qE '^[[:space:]]*CHEERER_[A-Z_]+=' "$_file" 2>/dev/null; then
+    CONFIG_LOAD_STATUS="ignored"
+    return 0
+  fi
 
   # Must NOT contain any line that is not: blank, comment, or CHEERER_*= assignment
   # Value portion is restricted to safe characters: no ;|&$`(){}<>!\
   if grep -qvE '^[[:space:]]*(CHEERER_[A-Z_]+=[A-Za-z0-9_./:@ -]*|#.*|[[:space:]]*)$' "$_file" 2>/dev/null; then
+    CONFIG_LOAD_STATUS="ignored"
     return 0
   fi
 
   # Safe to source
   . "$_file"
+  CONFIG_LOAD_STATUS="accepted"
 }
 
 # ---------------------------------------------------------------------------

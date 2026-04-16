@@ -1,6 +1,15 @@
 #!/bin/bash
 
+render_explain() {
+  [[ "${EXPLAIN_ENABLED:-false}" == "true" ]] || return 0
+  EXPLAIN_REASONING+="$1"$'\n'
+}
+
 render_catalog_path() {
+  if declare -F catalog_path_for_lang >/dev/null 2>&1; then
+    catalog_path_for_lang "${CHEERER_LANG}"
+    return 0
+  fi
   printf '%s/scripts/messages/catalog_%s.tsv' "${CHEERER_ROOT:-$PWD}" "$CHEERER_LANG"
 }
 
@@ -61,6 +70,7 @@ render_select_message() {
         RENDER_MESSAGE_TEXT="$message_text"
         [[ -n "${STATE_MILESTONE_MSG:-}" ]] && RENDER_MESSAGE_TEXT="$RENDER_MESSAGE_TEXT ${STATE_MILESTONE_MSG}"
         RENDER_MESSAGE_TEXT="${RENDER_MESSAGE_TEXT:0:60}"
+        render_explain "message selected from locale catalog avoiding recent repeats"
         return 0
       fi
       [[ -n "$fallback_line" ]] || fallback_line="$message_id|$message_text"
@@ -72,11 +82,13 @@ render_select_message() {
     RENDER_MESSAGE_TEXT="${fallback_line#*|}"
     [[ -n "${STATE_MILESTONE_MSG:-}" ]] && RENDER_MESSAGE_TEXT="$RENDER_MESSAGE_TEXT ${STATE_MILESTONE_MSG}"
     RENDER_MESSAGE_TEXT="${RENDER_MESSAGE_TEXT:0:60}"
+    render_explain "message fallback reused recent pair because all candidates were recently used"
     return 0
   fi
 
   RENDER_MESSAGE_ID="fallback"
   RENDER_MESSAGE_TEXT="Great work. Task complete."
+  render_explain "missing catalog entry forced generic fallback message"
 }
 
 render_should_animate() {

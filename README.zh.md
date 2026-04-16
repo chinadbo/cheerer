@@ -163,6 +163,8 @@ chmod +x ~/.cheerer/bin/cheer
 - `CHEERER_INTENSITY=soft` 会让轻量完成更克制，`high` 会让庆祝更有冲劲，包括在 `CHEERER_MODE=auto` 下让 `Stop` Hook 也播放动画。
 - 文案按语言目录选择，并尽量避免连续重复。
 
+内置各语言目录在测试中持续验证，确保每种语言都能覆盖当前策略所需的全部庆祝路径。如果某个语言目录缺少必要的 `(tier, mood)` 组合，测试套件会在发布前报错拦截。
+
 ## 🚀 直接使用
 
 在仓库目录中可直接运行：
@@ -182,14 +184,29 @@ bash bin/cheer --epic
 bash bin/cheer --stats
 bash bin/cheer --preview
 bash bin/cheer --list
+bash bin/cheer --doctor
+bash bin/cheer --why < tests/fixtures/taskcompleted-short.json
 ```
 
-`bin/cheer` 支持四个 flag：
+`bin/cheer` 支持六个 flag：
 
 - `--epic` —— 强制 Epic 模式（依次播放六段动画）
 - `--stats` —— 输出总触发次数、已达成里程碑、最后一次触发时间
 - `--preview [name]` —— 不触发 Hook 直接播放动画；`name` 可选，省略则随机
 - `--list` —— 列出所有可用动画和语言
+- `--doctor` —— 执行只读的安装/运行时/配置诊断；存在硬错误时以非零状态退出
+- `--why` —— 以纯文本说明当前庆祝决策，不播放动画、不触发语音、不修改任何状态
+
+## 🩺 诊断
+
+`cheer --doctor` 以分组方式输出 `PASS`、`WARN`、`FAIL` 行，涵盖配置安全性、运行时模式、资源文件、语言目录和可选用户文件。
+
+- 退出码 `0`：仅含 `PASS` / `WARN`
+- 退出码非零：存在至少一条 `FAIL`
+
+`cheer --why` 以纯文本解释单次庆祝决策。它读取与正常运行时相同的 Hook JSON 数据，若 stdin 为空则使用内置的短任务探针。
+
+两个命令均为只读诊断路径：不追加历史、不更新统计、不写入冷却状态、不播放动画、不触发语音。
 
 ## 测试
 

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+policy_explain() {
+  [[ "${EXPLAIN_ENABLED:-false}" == "true" ]] || return 0
+  EXPLAIN_REASONING+="$1"$'\n'
+}
+
 _policy_apply_time_of_day() {
   local hour="${CHEERER_HOUR:-$(date +%H 2>/dev/null || echo 12)}"
   hour=$((10#$hour))
@@ -8,8 +13,10 @@ _policy_apply_time_of_day() {
   if [[ "$hour" -ge 6 ]] && [[ "$hour" -lt 12 ]]; then
     if [[ "$POLICY_MOOD" == "gentle" ]]; then
       POLICY_MOOD="steady"
+      policy_explain "morning adjusted mood"
     elif [[ "$POLICY_MOOD" == "steady" ]]; then
       POLICY_MOOD="rapid_fire"
+      policy_explain "morning adjusted mood"
     fi
   fi
 
@@ -17,6 +24,7 @@ _policy_apply_time_of_day() {
   if [[ "$hour" -ge 22 ]] || [[ "$hour" -lt 6 ]]; then
     if [[ "$POLICY_TIER" == "quick" ]] || [[ "$POLICY_TIER" == "solid" ]]; then
       POLICY_MOOD="cozy"
+      policy_explain "late-night cozy override applied"
     fi
   fi
 }
@@ -36,6 +44,7 @@ policy_pick_animation() {
   for candidate in "${candidates[@]}"; do
     if [[ "$recent_csv" != *",$candidate,"* ]]; then
       POLICY_ANIMATION="$candidate"
+      policy_explain "animation selected from recent-history avoidance"
       return 0
     fi
   done
@@ -49,29 +58,38 @@ policy_select_celebration() {
   POLICY_ANIMATION_MODE="single"
   POLICY_ANIMATION=""
 
+  if [[ "$HOOK_EVENT" == "TaskCompleted" ]]; then
+    policy_explain "default TaskCompleted starts at solid/steady"
+  fi
+
   if [[ "$HOOK_EVENT" == "Stop" ]]; then
     POLICY_TIER="quick"
     POLICY_MOOD="gentle"
+    policy_explain "Stop starts at quick/gentle"
   fi
 
   if [[ "$HOOK_EVENT" == "TaskCompleted" ]] && [[ "${TASK_DURATION:-0}" =~ ^[0-9]+$ ]] && [[ "${TASK_DURATION:-0}" -ge 60 ]]; then
     POLICY_TIER="big"
     POLICY_MOOD="triumphant"
+    policy_explain "long-task threshold met"
   fi
 
   if [[ "${RECENT_TASKCOMPLETED_COUNT:-0}" -ge 4 ]] && [[ "$POLICY_TIER" == "solid" ]]; then
     POLICY_MOOD="rapid_fire"
+    policy_explain "rapid-fire threshold met"
   fi
 
   if [[ "${SESSION_STREAK:-0}" -ge 5 ]] && [[ "$POLICY_TIER" != "legendary" ]]; then
     POLICY_TIER="big"
     POLICY_MOOD="streak"
+    policy_explain "streak threshold met"
   fi
 
   if [[ -n "${STATE_MILESTONE_MSG:-}" ]]; then
     POLICY_TIER="legendary"
     POLICY_MOOD="milestone"
     POLICY_ANIMATION="fireworks"
+    policy_explain "milestone override applied"
     return 0
   fi
 
@@ -83,6 +101,7 @@ policy_select_celebration() {
         POLICY_TIER="big"
       fi
       POLICY_MOOD="hype"
+      policy_explain "hype style forced hype mood"
       ;;
     cozy)
       if [[ "$POLICY_TIER" == "big" ]]; then
@@ -91,6 +110,7 @@ policy_select_celebration() {
       if [[ "$POLICY_MOOD" == "steady" ]]; then
         POLICY_MOOD="cozy"
       fi
+      policy_explain "cozy style softened mood"
       ;;
     balanced|adaptive)
       ;;

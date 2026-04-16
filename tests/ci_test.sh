@@ -22,6 +22,9 @@ test_run_sh_all_includes_hardening_suites() {
   runner="$(< "$ROOT_DIR/tests/run.sh")"
   assert_contains "$runner" "bash tests/config_test.sh"
   assert_contains "$runner" "bash tests/context_test.sh"
+  assert_contains "$runner" "bash tests/catalog_test.sh"
+  assert_contains "$runner" "bash tests/doctor_test.sh"
+  assert_contains "$runner" "bash tests/explain_test.sh"
   assert_contains "$runner" "bash tests/ci_test.sh"
 }
 
@@ -30,6 +33,9 @@ test_run_sh_supports_named_hardening_suites() {
   runner="$(< "$ROOT_DIR/tests/run.sh")"
   assert_contains "$runner" "config)"
   assert_contains "$runner" "context)"
+  assert_contains "$runner" "catalog)"
+  assert_contains "$runner" "doctor)"
+  assert_contains "$runner" "explain)"
   assert_contains "$runner" "ci)"
 }
 

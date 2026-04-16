@@ -26,13 +26,13 @@ assert_eq() {
 assert_contains() {
   local haystack="$1"
   local needle="$2"
-  printf '%s' "$haystack" | grep -F "$needle" >/dev/null 2>&1
+  printf '%s' "$haystack" | grep -F -- "$needle" >/dev/null 2>&1
 }
 
 assert_not_contains() {
   local haystack="$1"
   local needle="$2"
-  if printf '%s' "$haystack" | grep -F "$needle" >/dev/null 2>&1; then
+  if printf '%s' "$haystack" | grep -F -- "$needle" >/dev/null 2>&1; then
     printf 'did not expect to find [%s]\n' "$needle"
     return 1
   fi

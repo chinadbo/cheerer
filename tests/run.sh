@@ -26,6 +26,15 @@ case "${1:-all}" in
   ci)
     bash tests/ci_test.sh
     ;;
+  catalog)
+    bash tests/catalog_test.sh
+    ;;
+  doctor)
+    bash tests/doctor_test.sh
+    ;;
+  explain)
+    bash tests/explain_test.sh
+    ;;
   all)
     bash tests/state_test.sh
     bash tests/policy_test.sh
@@ -34,9 +43,12 @@ case "${1:-all}" in
     bash tests/config_test.sh
     bash tests/context_test.sh
     bash tests/ci_test.sh
+    bash tests/catalog_test.sh
+    bash tests/doctor_test.sh
+    bash tests/explain_test.sh
     ;;
   *)
-    echo "usage: bash tests/run.sh [state|policy|render|integration|config|context|ci|all]"
+    echo "usage: bash tests/run.sh [state|policy|render|integration|config|context|catalog|doctor|explain|ci|all]"
     exit 1
     ;;
 esac
