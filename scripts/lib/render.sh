@@ -155,7 +155,7 @@ render_emit() {
   fi
 
   export CHEERER_DUMB="${CHEERER_DUMB:-false}"
-  export CHEERER_VOICE="${CHEERER_VOICE:-on}"
+  export CHEERER_VOICE="${CHEERER_VOICE:-off}"
 
   if [[ -f "$voice_script" ]]; then
     bash "$voice_script"

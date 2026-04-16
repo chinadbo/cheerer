@@ -6,6 +6,20 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "$ROOT_DIR/scripts/lib/config.sh"
 
 # ---------------------------------------------------------------------------
+# test_config_apply_defaults_uses_voice_off_when_unset
+# ---------------------------------------------------------------------------
+test_config_apply_defaults_uses_voice_off_when_unset() {
+  unset CHEERER_LANG CHEERER_ANIM CHEERER_VOICE CHEERER_STYLE CHEERER_INTENSITY \
+        CHEERER_DUMB CHEERER_MODE CHEERER_COOLDOWN CHEERER_ANIM_DURATION \
+        CHEERER_EPIC CHEERER_EPIC_THRESHOLD CHEERER_ENABLED 2>/dev/null || true
+  unset CLAUDE_PLUGIN_OPTION_VOICE 2>/dev/null || true
+
+  config_apply_defaults
+
+  assert_eq "off" "$CHEERER_VOICE" || return 1
+}
+
+# ---------------------------------------------------------------------------
 # test_config_apply_defaults_uses_plugin_options
 # ---------------------------------------------------------------------------
 test_config_apply_defaults_uses_plugin_options() {
@@ -187,6 +201,7 @@ test_config_print_current_lists_effective_values() {
 # ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
+run_test "config_apply_defaults_uses_voice_off_when_unset"    test_config_apply_defaults_uses_voice_off_when_unset
 run_test "config_apply_defaults_uses_plugin_options"          test_config_apply_defaults_uses_plugin_options
 run_test "config_apply_defaults_normalizes_invalid_values"    test_config_apply_defaults_normalizes_invalid_values
 run_test "config_load_file_rejects_non_cheerer_lines"         test_config_load_file_rejects_non_cheerer_lines
