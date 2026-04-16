@@ -6,7 +6,7 @@
 
 **语言：** [English](README.md) | 中文 | [日本語](README.ja.md)
 
-每当 Claude Code 完成任务时，在终端播放弹幕动画 + 多语言语音鼓励，让编码更快乐！
+每当 Claude Code 完成任务时，在终端播放弹幕动画与鼓励文字，让编码更快乐！开启语音后还可享受多语言语音鼓励。
 
 ## ✨ 功能
 
@@ -122,12 +122,14 @@ chmod +x ~/.cheerer/bin/cheer
 /plugin enable cheerer
 > 语音语言（zh / en / ja / ko / es）：zh
 > 动画类型（random / basketball / dance / fireworks / rocket / trophy / wave / epic）：random
-> 启用语音（on / off）：on
+> 启用语音（on / off）：off
 > 鼓励风格（adaptive / balanced / hype / cozy）：adaptive
 > 鼓励强度（soft / normal / high）：normal
 ```
 
 如果没有出现交互提示，也可以直接通过环境变量完成同样的配置。
+
+语音在全新安装时默认为可选关闭状态。保持 CHEERER_VOICE 未设置（或显式设为 off）即可维持纯文本优先，需要语音鼓励时再设为 on。
 
 ### 方式二：环境变量
 
@@ -138,7 +140,7 @@ chmod +x ~/.cheerer/bin/cheer
 | `CHEERER_ENABLED` | 主开关 | `true` / `false` | `true` |
 | `CHEERER_LANG` | 语音语言 | `zh` / `en` / `ja` / `ko` / `es` | `zh` |
 | `CHEERER_ANIM` | 动画类型 | `basketball` / `dance` / `fireworks` / `rocket` / `trophy` / `wave` / `epic` / `random` | `random` |
-| `CHEERER_VOICE` | 语音开关 | `on` / `off` / `true` / `false` | `on` |
+| `CHEERER_VOICE` | 语音开关 | `on` / `off` / `true` / `false` | `off` |
 | `CHEERER_DUMB` | 强制纯文本降级或保持自动检测 | `auto` / `true` / `false` | `auto` |
 | `CHEERER_MODE` | 输出模式 | `auto` / `full` / `text` | `auto` |
 | `CHEERER_COOLDOWN` | 两次触发的冷却时间（秒） | 正整数 | `3` |

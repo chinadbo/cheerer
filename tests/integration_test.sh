@@ -530,6 +530,7 @@ test_help_flag_shows_usage() {
   assert_contains "$output" "CHEERER_LANG"
   assert_contains "$output" "CHEERER_COOLDOWN"
   assert_contains "$output" "CHEERER_ANIM_DURATION"
+  assert_contains "$output" "CHEERER_VOICE          Voice output (on/off, default: off)"
 }
 
 test_config_flag_shows_values() {
@@ -768,4 +769,12 @@ test_shared_voice_script_respects_explicit_on() {
 
 run_test "shared_voice_script_defaults_off_when_unset" test_shared_voice_script_defaults_off_when_unset
 run_test "shared_voice_script_respects_explicit_on" test_shared_voice_script_respects_explicit_on
+
+test_plugin_manifest_reports_voice_default_off() {
+  local manifest
+  manifest="$(< .claude-plugin/plugin.json)"
+  assert_contains "$manifest" "Enable voice output (on / off / true / false, default: off)"
+}
+
+run_test "plugin_manifest_reports_voice_default_off" test_plugin_manifest_reports_voice_default_off
 finish_tests
