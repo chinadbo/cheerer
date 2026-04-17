@@ -2,4 +2,5 @@
 *.log
 /tmp/
 .claude
+.worktrees/
 docs

@@ -24,7 +24,7 @@ else
   printf '\033[1;32m🎉 %s\033[0m\n' "$_msg"
 fi
 
-CHEERER_VOICE="${CHEERER_VOICE:-on}"
+CHEERER_VOICE="${CHEERER_VOICE:-off}"
 if [[ "$CHEERER_VOICE" == "off" ]] || [[ "$CHEERER_VOICE" == "false" ]]; then
   exit 0
 fi

@@ -330,4 +330,32 @@ test_render_custom_message_skips_tab_only_lines() {
 }
 
 run_test "render_custom_message_skips_tab_only_lines" test_render_custom_message_skips_tab_only_lines
+
+test_render_emit_exports_voice_off_by_default() {
+  local tmp_dir result
+  tmp_dir="$(make_tmp_dir)"
+  mkdir -p "$tmp_dir/voices" "$tmp_dir/animations"
+
+  cat > "$tmp_dir/voices/cheer_en.sh" <<'VOICE_EOF'
+#!/bin/bash
+printf 'voice=%s\n' "${CHEERER_VOICE:-unset}"
+VOICE_EOF
+  chmod +x "$tmp_dir/voices/cheer_en.sh"
+
+  VOICE_DIR="$tmp_dir/voices"
+  ANIM_DIR="$tmp_dir/animations"
+  CHEERER_LANG="en"
+  unset CHEERER_VOICE 2>/dev/null || true
+  CHEERER_DUMB="true"
+  RENDER_ANIMATE="false"
+  IN_COOLDOWN="false"
+  RENDER_MESSAGE_TEXT="Text path still runs"
+  RENDER_MESSAGE_ID="voice_default_off"
+
+  result="$(render_emit)"
+
+  assert_contains "$result" "voice=off"
+}
+
+run_test "render_emit_exports_voice_off_by_default" test_render_emit_exports_voice_off_by_default
 finish_tests

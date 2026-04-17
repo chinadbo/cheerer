@@ -26,7 +26,7 @@
     "voice": {
       "type": "string",
       "title": "Voice output",
-      "description": "Enable voice output (on / off / true / false, default: on)",
+      "description": "Enable voice output (on / off / true / false, default: off)",
       "sensitive": false
     },
     "style": {

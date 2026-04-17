@@ -6,7 +6,7 @@
 
 **言語：** [English](README.md) | [中文](README.zh.md) | 日本語
 
-Claude Code がタスクを完了すると、cheerer はターミナルで弾幕アニメーションと多言語の音声応援を再生し、コーディングをもっと楽しくします。
+Claude Code がタスクを完了すると、cheerer はターミナルで弾幕アニメーションと応援メッセージを表示し、コーディングをもっと楽しくします。音声応援が必要なときは音声出力を有効にできます。
 
 ## ✨ 主な機能
 
@@ -122,12 +122,14 @@ Claude Code が `/plugin enable cheerer` 中に設定入力を表示した場合
 /plugin enable cheerer
 > 音声言語（zh / en / ja / ko / es）: ja
 > アニメーション（random / basketball / dance / fireworks / rocket / trophy / wave / epic）: random
-> 音声出力（on / off）: on
+> 音声出力（on / off）: off
 > 応援スタイル（adaptive / balanced / hype / cozy）: adaptive
 > 応援の強さ（soft / normal / high）: normal
 ```
 
 入力プロンプトが表示されない場合は、同じ設定を環境変数で指定してください。
+
+新規インストールでは音声はオプトインです。CHEERER_VOICE を未設定のままにするか off に設定するとテキスト優先のままになり、音声応援が必要な場合だけ on にしてください。
 
 ### 方法2：環境変数
 
@@ -138,7 +140,7 @@ Claude Code が `/plugin enable cheerer` 中に設定入力を表示した場合
 | `CHEERER_ENABLED` | マスタースイッチ | `true` / `false` | `true` |
 | `CHEERER_LANG` | 音声言語 | `zh` / `en` / `ja` / `ko` / `es` | `zh` |
 | `CHEERER_ANIM` | アニメーション | `basketball` / `dance` / `fireworks` / `rocket` / `trophy` / `wave` / `epic` / `random` | `random` |
-| `CHEERER_VOICE` | 音声出力 | `on` / `off` / `true` / `false` | `on` |
+| `CHEERER_VOICE` | 音声出力 | `on` / `off` / `true` / `false` | `off` |
 | `CHEERER_DUMB` | テキストのみを強制するか自動判定を使う | `auto` / `true` / `false` | `auto` |
 | `CHEERER_MODE` | 出力モード | `auto` / `full` / `text` | `auto` |
 | `CHEERER_COOLDOWN` | トリガー間クールダウン（秒） | 正の整数 | `3` |
