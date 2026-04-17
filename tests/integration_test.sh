@@ -754,14 +754,14 @@ test_shared_voice_script_respects_explicit_on() {
   bin_dir="$tmp_dir/bin"
   mkdir -p "$bin_dir"
 
-  printf '#!/bin/bash\nprintf "say-called\\n" > "%s"\n' "$tmp_dir/voice.log" > "$bin_dir/say"
+  printf '#!/bin/bash\nsleep 0.6\nprintf "say-called\\n" > "%s"\n' "$tmp_dir/voice.log" > "$bin_dir/say"
   chmod +x "$bin_dir/say"
 
   PATH="$bin_dir:$PATH" CHEERER_LANG="en" CHEERER_DUMB="true" CHEERER_VOICE="on" bash scripts/voices/cheer.sh >/dev/null
 
-  sleep 1
-  for i in 1 2 3 4 5; do
+  for i in 1 2 3 4 5 6 7 8 9 10; do
     [[ -f "$tmp_dir/voice.log" ]] && break
+    sleep 0.2
   done
 
   [[ -f "$tmp_dir/voice.log" ]] || return 1
